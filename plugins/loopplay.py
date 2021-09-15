@@ -53,7 +53,7 @@ async def loopaplay(_, message: Message):
         ogdo=message.reply_to_message.audio.file_id
         await message.reply("Downloading..")
         file=await message.reply_to_message.download(file_name="./tgd/", progress=progress_bar, progress_args=(message.reply_to_message.audio.file_size, time.time(), msg))
-        Config.FILE['AUDIO_FILE']=file
+        Config.FILES['AUDIO_FILE']=file
     if type=="youtube" or type=="query":
         if type=="youtube":
             msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
