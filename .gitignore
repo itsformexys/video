@@ -1,0 +1,5 @@
+
+*.pyc
+test.py
+*.session
+*.session-journal
