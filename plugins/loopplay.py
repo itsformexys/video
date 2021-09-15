@@ -140,7 +140,7 @@ async def addideoloop_to_playlist(_, message: Message):
     if type=="video":
        await message.reply("Downloading..")
        file=await message.reply_to_message.download(file_name="tgd/")
-    if type=="youtube" or type=="query":
+    elif type=="youtube" or type=="query":
         if type=="youtube":
             msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
             url=yturl
@@ -162,7 +162,7 @@ async def addideoloop_to_playlist(_, message: Message):
         def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
         with YoutubeDL(def_ydl_opts) as ydl:
             try:
-                ydl_info = ydl.extract_info(file, download=False)
+                ydl_info = ydl.extract_info(url, download=False)
             except Exception as e:
                 LOGGER.error(f"Errors occured while getting link from youtube video {e}")
                 return await message.reply("Unable to download video")
