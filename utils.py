@@ -463,10 +463,10 @@ async def video_join_call(link):
     command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
     process = await asyncio.create_subprocess_exec(
         *command,
-        stdout=ffmpeg_log,
-        stderr=asyncio.subprocess.STDOUT,
+        stdout=asyncio.subprocess.PIPE, 
+        stderr=asyncio.subprocess.PIPE,
         )
-    #await process.communicate()
+    await process.communicate()
     while not os.path.exists(raw_video):
         await sleep(1)
     Config.FFMPEG_PROCESSES['VIDEO']=process
