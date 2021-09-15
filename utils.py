@@ -388,8 +388,6 @@ async def manage_loop_audio():
     Config.AUDIO_STATUS = True
 
 async def manage_loop_vidwo():
-    if not Config.AUDIO_STATUS:
-        await manage_loop_audio()
     get_details = Config.FILES.get("VIDEO_DETAILS")
     file_type=get_details['type']
     original_file=get_details['link']
@@ -612,7 +610,6 @@ async def video_join_call(link):
                 return "No Audio Found"
             audiolink=get_data['link']
             dur=get_duration(audiolink)
-
         except:
             dur=0
     if dur == 0:
@@ -1025,6 +1022,8 @@ def is_radio():
 def get_duration(file):
     try:
         total=ffmpeg.probe(file)['format']['duration']
+        if total is None:
+            total=0
         return total
     except:
         return 0

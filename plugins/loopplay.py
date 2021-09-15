@@ -1,5 +1,5 @@
 from pyrogram import Client, filters
-from utils import audio_join_call, download, get_admins, get_height_and_width, is_admin, is_radio, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, video_join_call
+from utils import audio_join_call, download, get_admins, get_duration, get_height_and_width, is_admin, is_radio, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, video_join_call
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from youtube_search import YoutubeSearch
 from pyrogram import Client, filters
@@ -112,9 +112,14 @@ async def loopaplay(_, message: Message):
     elif type == 'radio':
         file=file
         ogdo = file
+    Config.FILES["AUDIO_DETAILS"] = {"type":type, "link":file, 'oglink':ogdo}
+    try:
+        dur=get_duration(file)
+    except:
+        dur=0
+    Config.DATA['AUDIO_DATA']={'dur':dur}
     k=await audio_join_call(file)
     await message.reply(k)
-    Config.FILES["AUDIO_DETAILS"] = {"type":type, "link":file, 'oglink':ogdo}
     Config.LOOP=True
 
 
