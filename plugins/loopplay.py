@@ -91,10 +91,10 @@ async def loopaplay(_, message: Message):
             if not urlr:
                 await message.reply("I was unable to download that audio.")
         file=urlr
-        k=await audio_join_call(file)
-        await message.reply(k)
-        Config.FILES["AUDIO_DETAILS"] = {"type":type, "link":file, 'oglink':ogdo}
-        Config.LOOP=True
+    k=await audio_join_call(file)
+    await message.reply(k)
+    Config.FILES["AUDIO_DETAILS"] = {"type":type, "link":file, 'oglink':ogdo}
+    Config.LOOP=True
 
 
 
