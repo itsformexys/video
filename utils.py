@@ -40,6 +40,7 @@ try:
     import ffmpeg
     import json
     import time
+    import re
     import sys
     import os
     import math
@@ -465,6 +466,30 @@ async def video_join_call(link):
         stdout=ffmpeg_log,
         stderr=asyncio.subprocess.STDOUT,
         )
+    last_percentage = None
+    file_name = None
+    while True:
+        latest = ffmpeg_log.readlines()
+        if not latest:
+            continue
+        else:
+            if match := re.search(r'\[ffmpeg\] Merging formats into "(.+\.\w+)"', " ".join(latest)):
+                file_name = match.group(1)
+            if file_name:
+                break
+            latest = latest[-1]
+            match = re.search(r'\[\w+\]\s+(?P<percentage>\d+\.?\d?%)(?:\sof\s+)(?P<total>\d+\.\d+\w+)\s(?:at\s+(\d+\.\d+\w+\/s)\s(?P<eta>.+))$', latest)
+            if match:
+                percent = match.group('percentage')
+                total = match.group('total')
+                eta = match.group('eta')
+                if last_percentage != percent:
+                    print(f"Downloading {percent} of {total}\n{eta}")
+                    last_percentage = percent
+                    await asyncio.sleep(2)
+            else:
+                continue
+    await process.communicate()
     while not os.path.exists(raw_video):
         await sleep(1)
     Config.FFMPEG_PROCESSES['VIDEO']=process
