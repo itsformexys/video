@@ -406,6 +406,7 @@ async def audio_join_call(link):
             stream_type=StreamType().local_stream,
             )
         Config.CALL_STATUS=True
+    Config.AUDIO_STATUS=True
     old=Config.GET_FILE.get('old_audio')
     if old:
         for file in old:
@@ -507,6 +508,7 @@ async def video_join_call(link):
         except:
             LOGGER.error("Error in deletion")
             pass
+    return "Video Started"
 
 
 
@@ -948,7 +950,76 @@ async def update():
             target=stop_and_restart()
             ).start()
 
+async def manage_loop_audio():
+    get_details = Config.FILES.get("AUDIO_DETAILS")
+    file_type=get_details['type']
+    original_file=get_details['link']
+    oglink=get_details['oglink']
+    if file_type == "audio":
+        if not Config.FILES.get('AUDIO_FILE'):
+            original_file = await bot.download_media(oglink, file_name=f'./tgd/')
+            Config.FILES['AUDIO_FILE'] = original_file
+    else:
+        def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
+        with YoutubeDL(def_ydl_opts) as ydl:
+            try:
+                ydl_info = ydl.extract_info(oglink, download=False)
+            except Exception as e:
+                LOGGER.error(f"Errors occured while getting link from youtube video {e}")
+            urlr=None
+            for each in ydl_info['formats']:
+                if each['acodec'] != 'none':
+                    urlr=each['url']
+                    break #prefer 640x360
+                else:
+                    continue
+            if not urlr:
+                await update()
+            original_file=urlr
+    await audio_join_call(original_file)
+    Config.FILES['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    Config.AUDIO_STATUS = True
 
+async def manage_loop_vidwo():
+    if not Config.AUDIO_STATUS:
+        await manage_loop_audio()
+    get_details = Config.FILES.get("VIDEO_DETAILS")
+    file_type=get_details['type']
+    original_file=get_details['link']
+    oglink=get_details['oglink']
+    if file_type == "video":
+        if not Config.FILES.get('VIDEO_FILE'):
+            original_file = await bot.download_media(oglink, file_name=f'./tgd/')
+            Config.FILES['VIDEO_FILE'] = original_file
+    else:
+        def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
+        with YoutubeDL(def_ydl_opts) as ydl:
+            try:
+                ydl_info = ydl.extract_info(oglink, download=False)
+            except Exception as e:
+                LOGGER.error(f"Errors occured while getting link from youtube video {e}")
+                await update()
+                return
+            urlr=None
+            for each in ydl_info['formats']:
+                if each['width'] == 640 \
+                    and each['acodec'] != 'none' \
+                        and each['vcodec'] != 'none':
+                        urlr=each['url']
+                        break #prefer 640x360
+                elif each['width'] \
+                    and each['width'] <= 1280 \
+                        and each['acodec'] != 'none' \
+                            and each['vcodec'] != 'none':
+                            urlr=each['url']
+                            continue # any other format less than 1280
+                else:
+                    continue
+            if urlr:
+                file=urlr
+            original_file=urlr
+    await video_join_call(original_file)
+    Config.FILES['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
 
 
 @group_call.on_raw_update()
@@ -978,6 +1049,12 @@ async def handler(client: PyTgCalls, update: Update):
 
 @group_call.on_stream_end()
 async def handler(client: PyTgCalls, update: Update):
+    if Config.LOOP:
+        if str(update) == 'STREAM_AUDIO_ENDED':
+            await manage_loop_audio()
+        elif str(update) == 'STREAM_VIDEO_ENDED':
+            await manage_loop_vidwo()
+        return
     if str(update) == "STREAM_AUDIO_ENDED" or str(update) == "STREAM_VIDEO_ENDED":
         if not Config.STREAM_END.get("STATUS"):
             Config.STREAM_END["STATUS"]=str(update)

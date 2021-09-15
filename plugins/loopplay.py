@@ -1,5 +1,5 @@
 from pyrogram import Client, filters
-from utils import audio_join_call, download, get_admins, is_admin, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, video_join_call
+from utils import audio_join_call, download, get_admins, is_admin, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, video_join_call
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from youtube_search import YoutubeSearch
 from pyrogram import Client, filters
@@ -10,7 +10,7 @@ from pyrogram import filters
 from config import Config
 from logger import LOGGER
 import re
-
+import time
 admin_filter=filters.create(is_admin) 
 
 @Client.on_message(filters.command(["audio", f"audio@{Config.BOT_USERNAME}"]) & (filters.chat(Config.CHAT) | filters.private))
@@ -50,8 +50,10 @@ async def loopaplay(_, message: Message):
             return
     user=f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     if type=="audio":
+        ogdo=message.reply_to_message.audio.file_id
         await message.reply("Downloading..")
-        file=await message.reply_to_message.download(file_name="tgd/")
+        file=await message.reply_to_message.download(file_name="./tgd/", progress=progress_bar, progress_args=(message.reply_to_message.audio.file_size, time.time(), msg))
+        Config.FILE['AUDIO_FILE']=file
     if type=="youtube" or type=="query":
         if type=="youtube":
             msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
@@ -79,23 +81,28 @@ async def loopaplay(_, message: Message):
                 LOGGER.error(f"Errors occured while getting link from youtube video {e}")
                 return await message.reply("I was unable to download that audio.")
             urlr=None
+            ogdo=url
             for each in ydl_info['formats']:
                 if each['acodec'] != 'none':
                     urlr=each['url']
                     break #prefer 640x360
                 else:
                     continue
-            if not url:
+            if not urlr:
                 await message.reply("I was unable to download that audio.")
         file=urlr
         k=await audio_join_call(file)
         await message.reply(k)
+        Config.FILES["AUDIO_DETAILS"] = {"type":type, "link":file, 'oglink':ogdo}
+        Config.LOOP=True
 
 
 
 
 @Client.on_message(filters.command(["video", f"video@{Config.BOT_USERNAME}"]) & (filters.chat(Config.CHAT) | filters.private))
 async def addideoloop_to_playlist(_, message: Message):
+    if not Config.AUDIO_STATUS:
+        return await message.reply("You need to start an audio first.")
     if Config.ADMIN_ONLY == "Y":
         admins = await get_admins(Config.CHAT)
         if message.from_user.id not in admins:
@@ -138,8 +145,9 @@ async def addideoloop_to_playlist(_, message: Message):
             return
     user=f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     if type=="video":
-       await message.reply("Downloading..")
-       file=await message.reply_to_message.download(file_name="tgd/")
+        ogdo=m_video.file_id
+        await message.reply("Downloading..")
+        file=await message.reply_to_message.download(file_name="tgd/", progress=progress_bar, progress_args=(m_video.file_size, time.time(), msg))
     elif type=="youtube" or type=="query":
         if type=="youtube":
             msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
@@ -167,6 +175,7 @@ async def addideoloop_to_playlist(_, message: Message):
                 LOGGER.error(f"Errors occured while getting link from youtube video {e}")
                 return await message.reply("Unable to download video")
             urlr=None
+            ogdo=url
             for each in ydl_info['formats']:
                 if each['width'] == 640 \
                     and each['acodec'] != 'none' \
@@ -189,5 +198,7 @@ async def addideoloop_to_playlist(_, message: Message):
         file=urlr
     k=await video_join_call(file)
     await message.reply(k)
+    Config.FILES["VIDEO_DETAILS"] = {"type":type, "link":file, "oglink":ogdo}
+    Config.LOOP=True
 
         
