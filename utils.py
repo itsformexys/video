@@ -460,36 +460,13 @@ async def video_join_call(link):
     except:
         dur=0
     Config.DATA['FILE_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
-    command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '30', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
+    command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
     process = await asyncio.create_subprocess_exec(
         *command,
         stdout=ffmpeg_log,
         stderr=asyncio.subprocess.STDOUT,
         )
-    last_percentage = None
-    file_name = None
-    while True:
-        latest = ffmpeg_log.readlines()
-        if not latest:
-            continue
-        else:
-            if match := re.search(r'\[ffmpeg\] Merging formats into "(.+\.\w+)"', " ".join(latest)):
-                file_name = match.group(1)
-            if file_name:
-                break
-            latest = latest[-1]
-            match = re.search(r'\[\w+\]\s+(?P<percentage>\d+\.?\d?%)(?:\sof\s+)(?P<total>\d+\.\d+\w+)\s(?:at\s+(\d+\.\d+\w+\/s)\s(?P<eta>.+))$', latest)
-            if match:
-                percent = match.group('percentage')
-                total = match.group('total')
-                eta = match.group('eta')
-                if last_percentage != percent:
-                    print(f"Downloading {percent} of {total}\n{eta}")
-                    last_percentage = percent
-                    await asyncio.sleep(2)
-            else:
-                continue
-    await process.communicate()
+    #await process.communicate()
     while not os.path.exists(raw_video):
         await sleep(1)
     Config.FFMPEG_PROCESSES['VIDEO']=process
@@ -514,7 +491,7 @@ async def video_join_call(link):
                     VideoParameters(
                         width=width,
                         height=height,
-                        frame_rate=30,
+                        frame_rate=20,
                     ),
                 ),
                 )
