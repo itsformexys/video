@@ -1,5 +1,5 @@
 from pyrogram import Client, filters
-from utils import audio_join_call, download, get_admins, is_admin, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, video_join_call
+from utils import audio_join_call, download, get_admins, get_height_and_width, is_admin, is_radio, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, video_join_call
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from youtube_search import YoutubeSearch
 from pyrogram import Client, filters
@@ -34,6 +34,15 @@ async def loopaplay(_, message: Message):
             if match:
                 type="youtube"
                 yturl=link
+            elif "http" in link:
+                type='radio'
+                file=link
+                try:
+                    k=is_radio(file)
+                except:
+                    k=False
+                if not k:
+                    return await message.reply("This is an unsupported url, give me an m3u8 link.")
         elif " " in message.text:
             text = message.text.split(" ", 1)
             query = text[1]
@@ -42,6 +51,15 @@ async def loopaplay(_, message: Message):
             if match:
                 type="youtube"
                 yturl=query
+            elif "http" in query:
+                type='radio'
+                file=query
+                try:
+                    k=is_radio(file)
+                except:
+                    k=False
+                if not k:
+                    return await message.reply("This is an unsupported url, give me an m3u8 link.")
             else:
                 type="query"
                 ysearch=query
@@ -91,6 +109,9 @@ async def loopaplay(_, message: Message):
             if not urlr:
                 await message.reply("I was unable to download that audio.")
         file=urlr
+    elif type == 'radio':
+        file=file
+        ogdo = file
     k=await audio_join_call(file)
     await message.reply(k)
     Config.FILES["AUDIO_DETAILS"] = {"type":type, "link":file, 'oglink':ogdo}
@@ -129,6 +150,15 @@ async def addideoloop_to_playlist(_, message: Message):
             if match:
                 type="youtube"
                 yturl=link
+            elif "http" in link:
+                type='radio'
+                file=link
+                try:
+                    k, l=get_height_and_width(file)
+                except:
+                    k=False
+                if not k:
+                    return await message.reply("This is an unsupported url, give me an m3u8 link.")
         elif " " in message.text:
             text = message.text.split(" ", 1)
             query = text[1]
@@ -137,9 +167,19 @@ async def addideoloop_to_playlist(_, message: Message):
             if match:
                 type="youtube"
                 yturl=query
+            elif "http" in query:
+                type='radio'
+                file=query
+                try:
+                    k, l=get_height_and_width(file)
+                except:
+                    k=False
+                if not k:
+                    return await message.reply("This is an unsupported url, give me an m3u8 link.")
             else:
                 type="query"
                 ysearch=query
+            
         else:
             await message.reply_text("You Didn't gave me anything to play.Reply to a video or a youtube link.")
             return
@@ -148,6 +188,7 @@ async def addideoloop_to_playlist(_, message: Message):
         ogdo=m_video.file_id
         await message.reply("Downloading..")
         file=await message.reply_to_message.download(file_name="tgd/", progress=progress_bar, progress_args=(m_video.file_size, time.time(), msg))
+        Config.FILES['VIDEO_FILE']=file
     elif type=="youtube" or type=="query":
         if type=="youtube":
             msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
@@ -194,8 +235,10 @@ async def addideoloop_to_playlist(_, message: Message):
                 file=urlr
             else:
                 return await message.reply("Unable to download video")
-       
         file=urlr
+    elif type == 'radio':
+        file=file
+        ogdo=file
     k=await video_join_call(file)
     await message.reply(k)
     Config.FILES["VIDEO_DETAILS"] = {"type":type, "link":file, "oglink":ogdo}
