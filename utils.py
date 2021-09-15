@@ -460,7 +460,7 @@ async def video_join_call(link):
     except:
         dur=0
     Config.DATA['FILE_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
-    command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
+    command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
     process = await asyncio.create_subprocess_exec(
         *command,
         stdout=asyncio.subprocess.PIPE, 
