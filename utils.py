@@ -465,10 +465,6 @@ async def sync_from_db():
 
 
 
-
-
-
-
 async def manage_loop_audio():
     get_details = Config.DATA.get("AUDIO_DETAILS")
     file_type=get_details['type']
@@ -505,6 +501,41 @@ async def manage_loop_audio():
 
 
 async def manage_restart():
+
+    get_details = Config.DATA.get("AUDIO_DETAILS")
+    if not get_details:
+        print("Nothing found")
+        return
+    file_type=get_details['type']
+    original_file=get_details['link']
+    oglink=get_details['oglink']
+    if file_type == "audio":
+        original_file = await bot.download_media(oglink, file_name=f'./tgd/')
+        Config.FILES['TG_AUDIO_FILE'] = original_file
+    elif file_type == 'radio':
+        original_file=original_file
+    else:
+        def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
+        with YoutubeDL(def_ydl_opts) as ydl:
+            try:
+                ydl_info = ydl.extract_info(oglink, download=False)
+            except Exception as e:
+                LOGGER.error(f"Errors occured while getting link from youtube video {e}")
+            urlr=None
+            for each in ydl_info['formats']:
+                if each['acodec'] != 'none':
+                    urlr=each['url']
+                    break #prefer 640x360
+                else:
+                    continue
+            if not urlr:
+                await update()
+            original_file=urlr   
+    Config.DATA['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    await sync_to_db()
+    Config.AUDIO_STATUS = True
+    await audio_join_call(original_file)
+
     get_details = Config.DATA.get("VIDEO_DETAILS")
     file_type=get_details['type']
     original_file=get_details['link']
@@ -541,41 +572,9 @@ async def manage_restart():
             if urlr:
                 file=urlr
             original_file=urlr
-    await audio_join_call(original_file)
-    Config.DATA['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
-    get_details = Config.DATA.get("AUDIO_DETAILS")
-    if not get_details:
-        print("Nothing found")
-        return
-    file_type=get_details['type']
-    original_file=get_details['link']
-    oglink=get_details['oglink']
-    if file_type == "audio":
-        original_file = await bot.download_media(oglink, file_name=f'./tgd/')
-        Config.FILES['TG_AUDIO_FILE'] = original_file
-    elif file_type == 'radio':
-        original_file=original_file
-    else:
-        def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
-        with YoutubeDL(def_ydl_opts) as ydl:
-            try:
-                ydl_info = ydl.extract_info(oglink, download=False)
-            except Exception as e:
-                LOGGER.error(f"Errors occured while getting link from youtube video {e}")
-            urlr=None
-            for each in ydl_info['formats']:
-                if each['acodec'] != 'none':
-                    urlr=each['url']
-                    break #prefer 640x360
-                else:
-                    continue
-            if not urlr:
-                await update()
-            original_file=urlr   
-    Config.DATA['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
-    await sync_to_db()
-    Config.AUDIO_STATUS = True
     
+    Config.DATA['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    await sync_to_db()
     await video_join_call(original_file)
     await sync_to_db()
 
@@ -667,6 +666,7 @@ async def audio_join_call(link):
         except:
             dur=0
         Config.DATA['AUDIO_DATA'] = {"dur": dur}
+        await sync_to_db()
     command = ['ffmpeg', '-i', link, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
     
     process = await asyncio.create_subprocess_exec(
