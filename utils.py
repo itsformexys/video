@@ -76,11 +76,11 @@ async def play(video=False, audio=False, both=False):
 
 
 async def skip():
-    if Config.STREAM_LINK and len(Config.playlist) == 0:
-        await stream_from_link()
+    if not Config.playlist:
+        print("No song in queue")
         return
-    elif not Config.playlist:
-        await start_stream()
+    elif Config.playlist == 1:
+        await play()
         return
     old_track = Config.playlist.pop(0)
     if old_track[3] == "telegram":
@@ -91,7 +91,6 @@ async def skip():
             pass
         del Config.GET_FILE[old_track[5]]
     if not Config.playlist:
-        await start_stream()
         return
     LOGGER.warning(f"START PLAYING: {Config.playlist[0][1]}")
     if Config.DUR.get('PAUSE'):
@@ -241,6 +240,7 @@ async def leave_call():
     if Config.STREAM_LINK:
         Config.STREAM_LINK=False
     Config.CALL_STATUS=False
+    await clear_loop_cache()
 
 
 
@@ -630,7 +630,6 @@ async def manage_loop_vidwo():
 
 
 
-
 async def audio_join_call(link):
     await kill_process()
     process = Config.FFMPEG_PROCESSES.get("AUDIO")
@@ -775,9 +774,9 @@ async def video_join_call(link):
         return "This stream is not supported"    
     Config.DATA['VIDEO_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
     await sync_to_db()
-    command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
-    """if not k:
+    if not k:
         if dur == 0:
+            command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
             print("Live video found")
             process = await asyncio.create_subprocess_exec(
                 *command,
@@ -785,6 +784,7 @@ async def video_join_call(link):
                 stderr=asyncio.subprocess.STDOUT,
                 )
         else:
+            command = ["ffmpeg", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
             print("Waiting for convertion")
             process = await asyncio.create_subprocess_exec(
                 *command,
@@ -793,14 +793,14 @@ async def video_join_call(link):
                 )
             await process.communicate()
         Config.FFMPEG_PROCESSES['VIDEO']=process
-    elif dur == 0:"""
-    print("Live Video was found (k)")
-    process = await asyncio.create_subprocess_exec(
-            *command,
-            stdout=ffmpeg_log,
-            stderr=asyncio.subprocess.STDOUT,
-            )
-    Config.FFMPEG_PROCESSES['VIDEO']=process
+    elif dur == 0:
+        command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
+        process = await asyncio.create_subprocess_exec(
+                *command,
+                stdout=ffmpeg_log,
+                stderr=asyncio.subprocess.STDOUT,
+                )
+        Config.FFMPEG_PROCESSES['VIDEO']=process
     while not os.path.exists(raw_video):
         await sleep(1)   
     data=Config.DATA.get('AUDIO_DATA')
@@ -826,8 +826,6 @@ async def video_join_call(link):
         return print("No audio")
     print("Reached ")
     if Config.CALL_STATUS:
-        print("Call Found")
-
         await group_call.change_stream(
             int(Config.CHAT),
             InputAudioStream(
@@ -847,7 +845,6 @@ async def video_join_call(link):
             )
 
     else:
-        print("join")   
         await group_call.join_group_call(
             int(Config.CHAT),
             InputAudioStream(
@@ -1390,8 +1387,6 @@ async def handler(client: PyTgCalls, update: Update):
             Config.STREAM_END["STATUS"]=str(update)
             if Config.STREAM_LINK and len(Config.playlist) == 0:
                 await stream_from_link(Config.STREAM_LINK)
-            elif not Config.playlist:
-                await start_stream()
             else:
                 await skip()          
             await sleep(15) #wait for max 15 sec

@@ -23,6 +23,9 @@ admin_filter=filters.create(is_admin)
 
 @Client.on_message(filters.command(["playlist", f"playlist@{Config.BOT_USERNAME}"]) & (filters.chat(Config.CHAT) | filters.private))
 async def player(client, message):
+    if Config.LOOP:
+        await message.reply("Loop play is enabled, these commands are disabled at present.")
+        return
     pl = await get_playlist_str()
     if message.chat.type == "private":
         await message.reply_text(
@@ -39,6 +42,9 @@ async def player(client, message):
 
 @Client.on_message(filters.command(["skip", f"skip@{Config.BOT_USERNAME}"]) & admin_filter & (filters.chat(Config.CHAT) | filters.private))
 async def skip_track(_, m: Message):
+    if Config.LOOP:
+        await m.reply("Loop play is enabled, these commands are disabled at present.")
+        return
     if not Config.playlist:
         await m.reply("Playlist is Empty.\nLive Streaming.")
         return
@@ -122,6 +128,9 @@ async def set_unmute(_, m: Message):
 
 @Client.on_message(filters.command(["replay", f"replay@{Config.BOT_USERNAME}"]) & admin_filter & (filters.chat(Config.CHAT) | filters.private))
 async def replay_playout(client, m: Message):
+    if Config.LOOP:
+        await m.reply("Loop play is enabled, these commands are disabled at present.")
+        return
     if not Config.CALL_STATUS:
         return await m.reply("Not Playing anything.")
     await m.reply_text(f"Replaying from begining")
@@ -130,6 +139,9 @@ async def replay_playout(client, m: Message):
 
 @Client.on_message(filters.command(["player", f"player@{Config.BOT_USERNAME}"]) & (filters.chat(Config.CHAT) | filters.private))
 async def show_player(client, m: Message):
+    if Config.LOOP:
+        await m.reply("Loop play is enabled, these commands are disabled at present.")
+        return
     data=Config.DATA.get('FILE_DATA')
     if not data.get('dur', 0) or \
         data.get('dur') == 0:
@@ -159,6 +171,9 @@ async def show_player(client, m: Message):
 
 @Client.on_message(filters.command(["seek", f"seek@{Config.BOT_USERNAME}"]) & admin_filter & (filters.chat(Config.CHAT) | filters.private))
 async def seek_playout(client, m: Message):
+    if Config.LOOP:
+        await m.reply("Loop play is enabled, these commands are disabled at present.")
+        return
     if not Config.CALL_STATUS:
         return await m.reply("Not Playing anything.")
     if not (Config.playlist or Config.STREAM_LINK):
