@@ -544,6 +544,9 @@ async def manage_restart():
     await audio_join_call(original_file)
     Config.DATA['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
     get_details = Config.DATA.get("AUDIO_DETAILS")
+    if not get_details:
+        print("Nothing found")
+        return
     file_type=get_details['type']
     original_file=get_details['link']
     oglink=get_details['oglink']

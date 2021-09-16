@@ -44,7 +44,8 @@ async def main():
     await bot.start()
     Config.BOT_USERNAME = (await bot.get_me()).username
     await group_call.start()
-    await manage_restart()
+    if Config.LOOP:
+        await manage_restart()
     #await start_stream()
     LOGGER.warning(f"{Config.BOT_USERNAME} Started.")
     await idle()
