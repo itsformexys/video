@@ -782,8 +782,33 @@ async def video_join_call(link):
         except Exception as e:
             LOGGER.error(f"Errors Occured while joining, retrying Error- {e}")
             return f"Errors occured {e}"
-        if Config.EDIT_TITLE:
-            await edit_title()
+    else:   
+        try:
+            await group_call.join_group_call(
+                int(Config.CHAT),
+                InputAudioStream(
+                    audio,
+                    AudioParameters(
+                        bitrate=48000,
+                    ),
+                ),
+                InputVideoStream(
+                    raw_video,
+                    VideoParameters(
+                        width=640,
+                        height=360,
+                        frame_rate=20,
+                    ),
+                ),
+                stream_type=StreamType().local_stream
+                )
+            Config.CALL_STATUS=True
+        except Exception as e:
+            LOGGER.error(f"Errors Occured while joining, retrying Error- {e}")
+            return f"Errors occured {e}"
+
+    if Config.EDIT_TITLE:
+        await edit_title()
     await sleep(1)  
     Config.FILES["RAW_VIDEO"] = raw_video
     old=Config.GET_FILE.get("old_video")
