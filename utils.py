@@ -576,6 +576,7 @@ async def audio_join_call(link):
         Config.GET_FILE["old_audio"] = os.listdir("./audiodownloads")
         new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
         raw_audio=f"./audiodownloads/{new}_audio.raw"
+        Config.FILES['RAW_AUDIO'] = raw_audio
     data=Config.DATA.get('AUDIO_DATA')
     if data:
         dur=data['dur']
@@ -586,28 +587,13 @@ async def audio_join_call(link):
             dur=0
         Config.DATA['AUDIO_DATA'] = {"dur": dur}
     command = ['ffmpeg', '-i', link, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
-    if not k:
-        if dur != 0:
-            process = await asyncio.create_subprocess_exec(
-                *command,
-                stdout=asyncio.subprocess.PIPE, 
-                stderr=asyncio.subprocess.PIPE,
-                )
-            await process.communicate()
-        else:
-            process = await asyncio.create_subprocess_exec(
-                *command,
-                stdout=ffmpeg_log,
-                stderr=asyncio.subprocess.STDOUT,
-                )
-        Config.FFMPEG_PROCESSES['AUDIO']=process
-    elif dur == 0:
-        process = await asyncio.create_subprocess_exec(
-                *command,
-                stdout=ffmpeg_log,
-                stderr=asyncio.subprocess.STDOUT,
-                )
-        Config.FFMPEG_PROCESSES['AUDIO']=process
+    
+    process = await asyncio.create_subprocess_exec(
+        *command,
+        stdout=ffmpeg_log,
+        stderr=asyncio.subprocess.STDOUT,
+        )
+    Config.FFMPEG_PROCESSES['AUDIO']=process
     while not os.path.exists(raw_audio):
         await sleep(1)
     if Config.CALL_STATUS:
@@ -711,24 +697,24 @@ async def video_join_call(link):
     await sync_to_db()
     command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
     if not k:
-        if dur != 0:
-            print("Dno k ur 0 video")
+        if dur == 0:
+            print("Live video found")
+            process = await asyncio.create_subprocess_exec(
+                *command,
+                stdout=ffmpeg_log,
+                stderr=asyncio.subprocess.STDOUT,
+                )
+        else:
+            print("Waiting for convertion")
             process = await asyncio.create_subprocess_exec(
                 *command,
                 stdout=asyncio.subprocess.PIPE, 
                 stderr=asyncio.subprocess.PIPE,
                 )
             await process.communicate()
-        else:
-            print("Dno k  live ur 0 video")
-            process = await asyncio.create_subprocess_exec(
-                *command,
-                stdout=ffmpeg_log,
-                stderr=asyncio.subprocess.STDOUT,
-                )
         Config.FFMPEG_PROCESSES['VIDEO']=process
     elif dur == 0:
-        print("Dur 0 video")
+        print("Live Video was found (k)")
         process = await asyncio.create_subprocess_exec(
                 *command,
                 stdout=ffmpeg_log,
@@ -758,55 +744,49 @@ async def video_join_call(link):
         Config.LOOP=False
         await sync_to_db()
         return print("No audio")
-    print("Resced ")
+    print("Reached ")
     if Config.CALL_STATUS:
-        print("chan")
-        try:
-            await group_call.change_stream(
-                int(Config.CHAT),
-                InputAudioStream(
-                    audio,
-                    AudioParameters(
-                        bitrate=48000,
-                    ),
+        print("Call Found")
+
+        await group_call.change_stream(
+            int(Config.CHAT),
+            InputAudioStream(
+                audio,
+                AudioParameters(
+                    bitrate=48000,
                 ),
-                InputVideoStream(
-                    raw_video,
-                    VideoParameters(
-                        width=640,
-                        height=360,
-                        frame_rate=20,
-                    ),
+            ),
+            InputVideoStream(
+                raw_video,
+                VideoParameters(
+                    width=640,
+                    height=360,
+                    frame_rate=20,
                 ),
-                )
-        except Exception as e:
-            LOGGER.error(f"Errors Occured while joining, retrying Error- {e}")
-            return f"Errors occured {e}"
+            ),
+            )
+
     else:
         print("join")   
-        try:
-            await group_call.join_group_call(
-                int(Config.CHAT),
-                InputAudioStream(
-                    audio,
-                    AudioParameters(
-                        bitrate=48000,
-                    ),
+        await group_call.join_group_call(
+            int(Config.CHAT),
+            InputAudioStream(
+                audio,
+                AudioParameters(
+                    bitrate=48000,
                 ),
-                InputVideoStream(
-                    raw_video,
-                    VideoParameters(
-                        width=640,
-                        height=360,
-                        frame_rate=20,
-                    ),
+            ),
+            InputVideoStream(
+                raw_video,
+                VideoParameters(
+                    width=640,
+                    height=360,
+                    frame_rate=20,
                 ),
-                stream_type=StreamType().local_stream
-                )
-            Config.CALL_STATUS=True
-        except Exception as e:
-            LOGGER.error(f"Errors Occured while joining, retrying Error- {e}")
-            return f"Errors occured {e}"
+            ),
+            stream_type=StreamType().local_stream
+            )
+        Config.CALL_STATUS=True
 
     if Config.EDIT_TITLE:
         await edit_title()
