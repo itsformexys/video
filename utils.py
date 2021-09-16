@@ -541,7 +541,7 @@ async def manage_restart():
             if urlr:
                 file=urlr
             original_file=urlr
-
+    await audio_join_call(original_file)
     Config.DATA['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
     get_details = Config.DATA.get("AUDIO_DETAILS")
     file_type=get_details['type']
@@ -572,6 +572,7 @@ async def manage_restart():
     Config.DATA['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
     await sync_to_db()
     Config.AUDIO_STATUS = True
+    
     await video_join_call(original_file)
     await sync_to_db()
 
