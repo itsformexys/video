@@ -756,6 +756,7 @@ async def video_join_call(link):
             Config.LOOP=False
             await sync_to_db()
             return "No audio playing"
+    audio=Config.FILES.get("RAW_AUDIO")
     if not os.path.exists(audio):
         await audio_join_call(audiolink)
         audio=Config.FILES.get("RAW_AUDIO")
