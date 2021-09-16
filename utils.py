@@ -399,7 +399,7 @@ async def clear_loop_cache():
     files = ['RAW_AUDIO', 'RAW_VIDEO', 'TG_AUDIO_FILE', 'TG_VIDEO_FILE']
     for file in files:
         f=Config.FILES.get(file)
-        if file:
+        if f:
             del Config.FILES[file]
             try:
                 os.remove(f)
