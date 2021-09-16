@@ -409,7 +409,7 @@ async def clear_loop_cache():
     for data in details:
         k=Config.DATA.get(data)
         if k:            
-            del Config.DATA[file]
+            del Config.DATA[data]
             await sync_to_db()
     Config.LOOP=False
     Config.AUDIO_STATUS=False

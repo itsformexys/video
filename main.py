@@ -25,9 +25,18 @@ import os
 if not os.path.isdir("./downloads"):
     os.makedirs("./downloads")
 else:
+    for f in os.listdir("./videodownloads"):
+        os.remove(f"./videodownloads/{f}")
+if not os.path.isdir("./videodownloads"):
+    os.makedirs("./videodownloads")
+else:
     for f in os.listdir("./downloads"):
         os.remove(f"./downloads/{f}")
-
+if not os.path.isdir("./audiodownloads"):
+    os.makedirs("./audiodownloads")
+else:
+    for f in os.listdir("./audiodownloads"):
+        os.remove(f"./audiodownloads/{f}")
 async def main():
     await sync_from_db()
     await bot.start()
