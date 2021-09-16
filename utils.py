@@ -430,9 +430,9 @@ async def sync_to_db():
 
 async def sync_from_db():
     if not await db.is_saved("DATA"):
-        await db.new_config("DATA", {})
+        await db.new_config("DATA", Config.DATA)
     if not await db.is_saved("LOOP"):
-        await db.new_config("LOOP", False)
+        await db.new_config("LOOP", Config.LOOP)
     data=await db.get_config("DATA") 
     Config.DATA = data
     loop = await db.get_config("LOOP")
