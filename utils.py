@@ -651,7 +651,10 @@ async def audio_join_call(link):
             pass
         except Exception as e:
             print(e)
-        del Config.FFMPEG_PROCESSES["AUDIO"]
+        try:
+            del Config.FFMPEG_PROCESSES["AUDIO"]
+        except:
+            pass
     Config.GET_FILE["old_audio"] = os.listdir("./audiodownloads")
     new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
     raw_audio=f"./audiodownloads/{new}_audio.raw"
