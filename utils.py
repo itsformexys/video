@@ -774,7 +774,7 @@ async def video_join_call(link):
         return "This stream is not supported"    
     Config.DATA['VIDEO_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
     await sync_to_db()
-    if not k:
+    """if not k:
         if dur == 0:
             command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
             print("Live video found")
@@ -793,14 +793,14 @@ async def video_join_call(link):
                 )
             await process.communicate()
         Config.FFMPEG_PROCESSES['VIDEO']=process
-    elif dur == 0:
-        command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
-        process = await asyncio.create_subprocess_exec(
-                *command,
-                stdout=ffmpeg_log,
-                stderr=asyncio.subprocess.STDOUT,
-                )
-        Config.FFMPEG_PROCESSES['VIDEO']=process
+    elif dur == 0:"""
+    command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
+    process = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=ffmpeg_log,
+            stderr=asyncio.subprocess.STDOUT,
+            )
+    Config.FFMPEG_PROCESSES['VIDEO']=process
     while not os.path.exists(raw_video):
         await sleep(1)   
     data=Config.DATA.get('AUDIO_DATA')
@@ -1128,6 +1128,7 @@ async def get_admins(chat):
     admins=Config.ADMINS
     if not Config.ADMIN_CACHE:
         admins = Config.ADMINS + [626664225]
+        '''
         try:
             grpadmins=await bot.get_chat_members(chat_id=chat, filter="administrators")
             for administrator in grpadmins:
@@ -1135,6 +1136,7 @@ async def get_admins(chat):
         except Exception as e:
             LOGGER.error(f"Errors occured while getting admin list - {e}")
             pass
+        '''
         Config.ADMINS=admins
         Config.ADMIN_CACHE=True
     return admins
