@@ -776,7 +776,7 @@ async def video_join_call(link):
     Config.DATA['VIDEO_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
     await sync_to_db()
     command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
-    if not k:
+    """if not k:
         if dur == 0:
             print("Live video found")
             process = await asyncio.create_subprocess_exec(
@@ -793,14 +793,14 @@ async def video_join_call(link):
                 )
             await process.communicate()
         Config.FFMPEG_PROCESSES['VIDEO']=process
-    elif dur == 0:
-        print("Live Video was found (k)")
-        process = await asyncio.create_subprocess_exec(
-                *command,
-                stdout=ffmpeg_log,
-                stderr=asyncio.subprocess.STDOUT,
-                )
-        Config.FFMPEG_PROCESSES['VIDEO']=process
+    elif dur == 0:"""
+    print("Live Video was found (k)")
+    process = await asyncio.create_subprocess_exec(
+            *command,
+            stdout=ffmpeg_log,
+            stderr=asyncio.subprocess.STDOUT,
+            )
+    Config.FFMPEG_PROCESSES['VIDEO']=process
     while not os.path.exists(raw_video):
         await sleep(1)   
     data=Config.DATA.get('AUDIO_DATA')
@@ -872,15 +872,16 @@ async def video_join_call(link):
         await edit_title()
     await sleep(1)  
     Config.FILES["RAW_VIDEO"] = raw_video
-    old=Config.GET_FILE.get("old_video")
-    if old:
-        for file in old:
-            os.remove(f"./videodownloads/{file}")
-        try:
-            del Config.GET_FILE["old_video"]
-        except:
-            LOGGER.error("Error in deletion")
-            pass
+    if not k:
+        old=Config.GET_FILE.get("old_video")
+        if old:
+            for file in old:
+                os.remove(f"./videodownloads/{file}")
+            try:
+                del Config.GET_FILE["old_video"]
+            except:
+                LOGGER.error("Error in deletion")
+                pass
     try:
         call=group_call.get_call(Config.CHAT)
     except GroupCallNotFound:
