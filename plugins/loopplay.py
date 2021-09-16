@@ -132,7 +132,8 @@ async def loopaplay(_, message: Message):
 
 @Client.on_message(filters.command(["video", f"video@{Config.BOT_USERNAME}"]) & (filters.chat(Config.CHAT) | filters.private))
 async def addideoloop_to_playlist(_, message: Message):
-    if not Config.AUDIO_STATUS:
+    data=Config.DATA.get('AUDIO_DATA')
+    if not data:
         return await message.reply("You need to start an audio first.")
     if Config.ADMIN_ONLY == "Y":
         admins = await get_admins(Config.CHAT)

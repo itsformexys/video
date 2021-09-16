@@ -638,6 +638,17 @@ async def audio_join_call(link):
                     pass
     Config.FILES['RAW_AUDIO'] = raw_audio
     Config.AUDIO_STATUS=True
+    try:
+        call=group_call.get_call(Config.CHAT)
+    except GroupCallNotFound:
+        await audio_join_call(link)
+        return
+    except Exception as e:
+        LOGGER.warning(e)
+        await audio_join_call(link)
+        return
+    if str(call.status) != "playing":
+        await audio_join_call(link)
     return "Started playing audio."
 
 
@@ -783,7 +794,18 @@ async def video_join_call(link):
         except:
             LOGGER.error("Error in deletion")
             pass
-    return "Video Started"
+    try:
+        call=group_call.get_call(Config.CHAT)
+    except GroupCallNotFound:
+        await video_join_call(link)
+        return
+    except Exception as e:
+        LOGGER.warning(e)
+        await video_join_call(link)
+        return
+    if str(call.status) != "playing":
+        await video_join_call(link)
+    return "Started playing video."
 
 
 async def get_raw_files(link, seek=False):

@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from utils import start_stream, sync_from_db
+from utils import manage_loop_vidwo, start_stream, sync_from_db
 from user import group_call
 from logger import LOGGER
 from config import Config
@@ -44,6 +44,7 @@ async def main():
     await bot.start()
     Config.BOT_USERNAME = (await bot.get_me()).username
     await group_call.start()
+    await manage_loop_vidwo()
     #await start_stream()
     LOGGER.warning(f"{Config.BOT_USERNAME} Started.")
     await idle()
