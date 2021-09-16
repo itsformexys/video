@@ -462,7 +462,6 @@ async def sync_from_db():
     Config.DATA = data
     loop = await db.get_config("LOOP")
     Config.LOOP=loop
-    print("Loaded ", Config.DATA, Config.LOOP)
 
 
 
@@ -494,8 +493,9 @@ async def manage_loop_audio():
             if not urlr:
                 await update()
             original_file=urlr
-    await audio_join_call(original_file)
+    
     Config.DATA['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    await audio_join_call(original_file)
     await sync_to_db()
     Config.AUDIO_STATUS = True
 
@@ -540,8 +540,8 @@ async def manage_loop_vidwo():
             if urlr:
                 file=urlr
             original_file=urlr
-    await video_join_call(original_file)
     Config.DATA['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    await video_join_call(original_file)
     await sync_to_db()
 
 
@@ -584,6 +584,7 @@ async def audio_join_call(link):
             dur=get_duration(link)
         except:
             dur=0
+        Config.DATA['AUDIO_DATA'] = {"dur": dur}
     command = ['ffmpeg', '-i', link, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
     if not k:
         if dur != 0:
@@ -682,6 +683,7 @@ async def video_join_call(link):
         Config.GET_FILE["old_video"] = os.listdir("./videodownloads")
         new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
         raw_video=f"./videodownloads/{new}_video.raw"
+        Config.FILES["RAW_VIDEO"] = raw_video
     data=Config.DATA.get('VIDEO_DATA')
     if data:
         width=int(data['width'])
@@ -701,6 +703,7 @@ async def video_join_call(link):
         not height:
         Config.STREAM_LINK=False
         Config.LOOP = False
+        print("Exiting..")
         await clear_loop_cache()
         await sync_to_db()
         return "This stream is not supported"    
@@ -709,6 +712,7 @@ async def video_join_call(link):
     command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
     if not k:
         if dur != 0:
+            print("Dno k ur 0 video")
             process = await asyncio.create_subprocess_exec(
                 *command,
                 stdout=asyncio.subprocess.PIPE, 
@@ -716,6 +720,7 @@ async def video_join_call(link):
                 )
             await process.communicate()
         else:
+            print("Dno k  live ur 0 video")
             process = await asyncio.create_subprocess_exec(
                 *command,
                 stdout=ffmpeg_log,
@@ -723,6 +728,7 @@ async def video_join_call(link):
                 )
         Config.FFMPEG_PROCESSES['VIDEO']=process
     elif dur == 0:
+        print("Dur 0 video")
         process = await asyncio.create_subprocess_exec(
                 *command,
                 stdout=ffmpeg_log,
@@ -739,6 +745,7 @@ async def video_join_call(link):
         audiolink=get_data['link']
         if not Config.AUDIO_STATUS or \
             not Config.FILES.get("RAW_AUDIO"):
+            print("No audio")
             await audio_join_call(audiolink)
     else:
         print("No audio")
