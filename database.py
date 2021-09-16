@@ -1,4 +1,5 @@
 import motor.motor_asyncio
+import asyncio
 URL="mongodb+srv://subinps:subinps@cluster0.s4eok.mongodb.net/myFirstDatabase?retryWrites=true&w=majority"
 COLLECTION="VideoPlayerConfig"
 
@@ -13,18 +14,17 @@ class Database:
             value = value,
         )   
     def add_config(self, name, value):
-        user = self.new_user(name, value)
+        user = self.new_config(name, value)
         self.col.insert_one(user)
     
     
-    def is_saved(self, name):
-        user = self.col.find_one({'name':name})
+    async def is_saved(self, name):
+        user = await self.col.find_one({'name':name})
         return True if user else False
      
-    def edit_config(self, name, value):
-        self.col.update_one({'name': name}, {'$set': {'value': value}})
+    async def edit_config(self, name, value):
+        await self.col.update_one({'name': name}, {'$set': {'value': value}})
 
     async def get_config(self, name):
-        config = self.col.find_one({'name':name})
-        return config.get('value', None)
-    
+        config = await self.col.find_one({'name':name})
+        return config.get('value')
