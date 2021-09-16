@@ -733,34 +733,27 @@ async def video_join_call(link):
         await sleep(1)   
     data=Config.DATA.get('AUDIO_DATA')
     if data:
-        dur=data['dur']
+        auddur=data['dur']
+    get_data=Config.DATA.get('AUDIO_DETAILS')
+    if get_data:
+        audiolink=get_data['link']
+        if not Config.AUDIO_STATUS or \
+            not Config.FILES.get("RAW_AUDIO"):
+            await audio_join_call(audiolink)
     else:
-        try:
-            get_data=Config.DATA.get('AUDIO_DETAILS')
-            if not get_data:
-                return "No Audio Found"
-            audiolink=get_data['link']
-            dur=get_duration(audiolink)
-        except:
-            dur=0
-    if dur == 0:
+        print("No audio")
+        return
+    if auddur == 0:
         await audio_join_call(audiolink)
         await sleep(1)
     audio=Config.FILES.get("RAW_AUDIO")
     if not audio:
-        get_data=Config.DATA.get('AUDIO_DETAILS')
-        if get_data:
-            audiolink=get_data['link']
-            await audio_join_call(audiolink)
-        else:
-            Config.LOOP=False
-            await sync_to_db()
-            return "No audio playing"
-    audio=Config.FILES.get("RAW_AUDIO")
-    if not os.path.exists(audio):
-        await audio_join_call(audiolink)
-        audio=Config.FILES.get("RAW_AUDIO")
+        Config.LOOP=False
+        await sync_to_db()
+        return print("No audio")
+    print("Resced ")
     if Config.CALL_STATUS:
+        print("chan")
         try:
             await group_call.change_stream(
                 int(Config.CHAT),
@@ -782,7 +775,8 @@ async def video_join_call(link):
         except Exception as e:
             LOGGER.error(f"Errors Occured while joining, retrying Error- {e}")
             return f"Errors occured {e}"
-    else:   
+    else:
+        print("join")   
         try:
             await group_call.join_group_call(
                 int(Config.CHAT),
