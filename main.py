@@ -25,13 +25,15 @@ import os
 if not os.path.isdir("./downloads"):
     os.makedirs("./downloads")
 else:
-    for f in os.listdir("./videodownloads"):
-        os.remove(f"./videodownloads/{f}")
+    for f in os.listdir("./downloads"):
+        os.remove(f"./downloads/{f}")
+        
 if not os.path.isdir("./videodownloads"):
     os.makedirs("./videodownloads")
 else:
-    for f in os.listdir("./downloads"):
-        os.remove(f"./downloads/{f}")
+    for f in os.listdir("./videodownloads"):
+        os.remove(f"./videodownloads/{f}")
+
 if not os.path.isdir("./audiodownloads"):
     os.makedirs("./audiodownloads")
 else:
