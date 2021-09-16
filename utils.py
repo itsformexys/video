@@ -418,9 +418,9 @@ async def clear_loop_cache():
 
 async def sync_to_db():
     if not await db.is_saved("DATA"):
-        await db.new_config("DATA", {})
+        await db.new_config("DATA", Config.DATA)
     if not await db.is_saved("LOOP"):
-        await db.new_config("LOOP", False)
+        await db.new_config("LOOP", Config.LOOP)
 
     await db.edit_config("DATA", Config.DATA)
     await db.edit_config("LOOP", Config.LOOP)
