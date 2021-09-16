@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from utils import start_stream
+from utils import start_stream, sync_from_db
 from user import group_call
 from logger import LOGGER
 from config import Config
@@ -29,6 +29,7 @@ else:
         os.remove(f"./downloads/{f}")
 
 async def main():
+    await sync_from_db()
     await bot.start()
     Config.BOT_USERNAME = (await bot.get_me()).username
     await group_call.start()

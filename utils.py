@@ -22,6 +22,7 @@ try:
     from concurrent.futures import CancelledError
     from pyrogram.raw.types import InputChannel
     from wrapt_timeout_decorator import timeout
+    from database import Database
     from pytgcalls.types import Update
     from user import group_call, USER
     from pytgcalls import StreamType
@@ -52,7 +53,7 @@ except ModuleNotFoundError:
     subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', file, '--upgrade'])
     os.execl(sys.executable, sys.executable, *sys.argv)
 ffmpeg_log = open("ffmpeg.txt", "w+")
-
+db=Database()
 async def play(video=False, audio=False, both=False):
     song=Config.playlist[0]    
     if song[3] == "telegram":
@@ -353,17 +354,102 @@ async def download(song, msg=None):
                 if len(Config.playlist) <= 1:
                     return
                 await download(Config.playlist[1])
-   
+
+async def clear_loop_cache():
+    process = Config.FFMPEG_PROCESSES.get("VIDEO")
+    if process:
+        try:
+            process.send_signal(SIGINT)
+            try:
+                await asyncio.shield(asyncio.wait_for(process.wait(), 5))
+            except CancelledError:
+                pass
+            if process.returncode is None:
+                process.kill()
+            try:
+                await asyncio.shield(
+                    asyncio.wait_for(process.wait(), 5))
+            except CancelledError:
+                pass
+        except ProcessLookupError:
+            pass
+        except Exception as e:
+            print(e)
+        del Config.FFMPEG_PROCESSES["VIDEO"]
+    process = Config.FFMPEG_PROCESSES.get("AUDIO")
+    if process:
+        try:
+            process.send_signal(SIGINT)
+            try:
+                await asyncio.shield(asyncio.wait_for(process.wait(), 5))
+            except CancelledError:
+                pass
+            if process.returncode is None:
+                process.kill()
+            try:
+                await asyncio.shield(
+                    asyncio.wait_for(process.wait(), 5))
+            except CancelledError:
+                pass
+        except ProcessLookupError:
+            pass
+        except Exception as e:
+            print(e)
+        del Config.FFMPEG_PROCESSES["AUDIO"]
+    files = ['RAW_AUDIO', 'RAW_VIDEO', 'TG_AUDIO_FILE', 'TG_VIDEO_FILE']
+    for file in files:
+        f=Config.FILES.get(file)
+        if file:
+            del Config.FILES[file]
+            try:
+                os.remove(f)
+            except:
+                pass
+    details = ['AUDIO_DETAILS', 'VIDEO_DETAILS', 'AUDIO_DATA', 'VIDEO_DATA']
+    for data in details:
+        k=Config.DATA.get(data)
+        if k:            
+            del Config.DATA[file]
+            await sync_to_db()
+    Config.LOOP=False
+    Config.AUDIO_STATUS=False
+    await sync_to_db()
+
+
+async def sync_to_db():
+    if not await db.is_saved("DATA"):
+        await db.new_config("DATA", {})
+    if not await db.is_saved("LOOP"):
+        await db.new_config("LOOP", False)
+
+    await db.edit_config("DATA", Config.DATA)
+    await db.edit_config("LOOP", Config.LOOP)
+    
+
+
+
+async def sync_from_db():
+    if not await db.is_saved("DATA"):
+        await db.new_config("DATA", {})
+    if not await db.is_saved("LOOP"):
+        await db.new_config("LOOP", False)
+    data=await db.get_config("DATA") 
+    Config.DATA = data
+    loop = await db.get_config("LOOP")
+    Config.LOOP=loop
+    print("Loaded ", Config.DATA, Config.LOOP)
+
+
 
 async def manage_loop_audio():
-    get_details = Config.FILES.get("AUDIO_DETAILS")
+    get_details = Config.DATA.get("AUDIO_DETAILS")
     file_type=get_details['type']
     original_file=get_details['link']
     oglink=get_details['oglink']
     if file_type == "audio":
-        if not Config.FILES.get('AUDIO_FILE'):
+        if not Config.FILES.get('TG_AUDIO_FILE'):
             original_file = await bot.download_media(oglink, file_name=f'./tgd/')
-            Config.FILES['AUDIO_FILE'] = original_file
+            Config.FILES['TG_AUDIO_FILE'] = original_file
     elif file_type == 'radio':
         original_file=original_file
     else:
@@ -384,18 +470,19 @@ async def manage_loop_audio():
                 await update()
             original_file=urlr
     await audio_join_call(original_file)
-    Config.FILES['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    Config.DATA['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    await sync_to_db()
     Config.AUDIO_STATUS = True
 
 async def manage_loop_vidwo():
-    get_details = Config.FILES.get("VIDEO_DETAILS")
+    get_details = Config.DATA.get("VIDEO_DETAILS")
     file_type=get_details['type']
     original_file=get_details['link']
     oglink=get_details['oglink']
     if file_type == "video":
-        if not Config.FILES.get('VIDEO_FILE'):
+        if not Config.FILES.get('TG_VIDEO_FILE'):
             original_file = await bot.download_media(oglink, file_name=f'./tgd/')
-            Config.FILES['VIDEO_FILE'] = original_file
+            Config.FILES['TG_VIDEO_FILE'] = original_file
     elif file_type == 'radio':
         original_file=original_file
     else:
@@ -426,7 +513,10 @@ async def manage_loop_vidwo():
                 file=urlr
             original_file=urlr
     await video_join_call(original_file)
-    Config.FILES['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    Config.DATA['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    await sync_to_db()
+
+
 
 
 async def audio_join_call(link):
@@ -451,7 +541,7 @@ async def audio_join_call(link):
         except Exception as e:
             print(e)
         del Config.FFMPEG_PROCESSES["AUDIO"]
-    k = Config.FILES.get('AUDIO')
+    k = Config.FILES.get('RAW_AUDIO')
     if k:
         raw_audio=k
     if not k:
@@ -518,7 +608,7 @@ async def audio_join_call(link):
                     os.remove(f"./audiodownloads/{file}")
                 except:
                     pass
-        Config.FILES['AUDIO'] = raw_audio
+    Config.FILES['RAW_AUDIO'] = raw_audio
     Config.AUDIO_STATUS=True
     return "Started playing audio."
 
@@ -546,14 +636,14 @@ async def video_join_call(link):
         except Exception as e:
             print(e)
         del Config.FFMPEG_PROCESSES["VIDEO"]
-    k=Config.FILES.get("VIDEO")
+    k=Config.FILES.get("RAW_VIDEO")
     if k:
         raw_video=k 
     else:
         Config.GET_FILE["old_video"] = os.listdir("./videodownloads")
         new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
         raw_video=f"./videodownloads/{new}_video.raw"
-    data=Config.DATA.get('FILE_DATA')
+    data=Config.DATA.get('VIDEO_DATA')
     if data:
         width=int(data['width'])
         height=int(data['height'])
@@ -572,8 +662,11 @@ async def video_join_call(link):
         not height:
         Config.STREAM_LINK=False
         Config.LOOP = False
+        await clear_loop_cache()
+        await sync_to_db()
         return "This stream is not supported"    
-    Config.DATA['FILE_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
+    Config.DATA['VIDEO_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
+    await sync_to_db()
     command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
     if not k:
         if dur != 0:
@@ -599,13 +692,12 @@ async def video_join_call(link):
         Config.FFMPEG_PROCESSES['VIDEO']=process
     while not os.path.exists(raw_video):
         await sleep(1)   
-
     data=Config.DATA.get('AUDIO_DATA')
     if data:
         dur=data['dur']
     else:
         try:
-            get_data=Config.FILES.get('AUDIO_DETAILS')
+            get_data=Config.DATA.get('AUDIO_DETAILS')
             if not get_data:
                 return "No Audio Found"
             audiolink=get_data['link']
@@ -615,9 +707,12 @@ async def video_join_call(link):
     if dur == 0:
         await audio_join_call(audiolink)
         await sleep(1)
-    audio=Config.FILES.get("AUDIO")
+    audio=Config.FILES.get("RAW_AUDIO")
     if not audio:
         return "No audio playing"
+    if not os.path.exists(audio):
+        await audio_join_call(audiolink)
+        audio=Config.FILES.get("RAW_AUDIO")
     if Config.CALL_STATUS:
         try:
             await group_call.change_stream(
@@ -643,6 +738,7 @@ async def video_join_call(link):
         if Config.EDIT_TITLE:
             await edit_title()
     await sleep(1)  
+    Config.FILES["RAW_VIDEO"] = raw_video
     old=Config.GET_FILE.get("old_video")
     if old:
         for file in old:
@@ -657,6 +753,7 @@ async def video_join_call(link):
 
 async def get_raw_files(link, seek=False):
     await kill_process()
+    await clear_loop_cache()
     Config.GET_FILE["old"] = os.listdir("./downloads")
     new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
     raw_audio=f"./downloads/{new}_audio.raw"
@@ -1103,6 +1200,11 @@ async def update():
         Thread(
             target=stop_and_restart()
             ).start()
+
+
+
+
+
 
 @group_call.on_raw_update()
 async def handler(client: PyTgCalls, update: Update):

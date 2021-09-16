@@ -7,3 +7,4 @@ youtube_dl
 youtube_search_python
 youtube_search
 heroku3
+motor==2.4.0
