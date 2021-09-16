@@ -465,6 +465,10 @@ async def sync_from_db():
 
 
 
+
+
+
+
 async def manage_loop_audio():
     get_details = Config.DATA.get("AUDIO_DETAILS")
     file_type=get_details['type']
@@ -646,14 +650,10 @@ async def audio_join_call(link):
         except Exception as e:
             print(e)
         del Config.FFMPEG_PROCESSES["AUDIO"]
-    k = Config.FILES.get('RAW_AUDIO')
-    if k:
-        raw_audio=k
-    if not k:
-        Config.GET_FILE["old_audio"] = os.listdir("./audiodownloads")
-        new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-        raw_audio=f"./audiodownloads/{new}_audio.raw"
-        Config.FILES['RAW_AUDIO'] = raw_audio
+    Config.GET_FILE["old_audio"] = os.listdir("./audiodownloads")
+    new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
+    raw_audio=f"./audiodownloads/{new}_audio.raw"
+    Config.FILES['RAW_AUDIO'] = raw_audio
     data=Config.DATA.get('AUDIO_DATA')
     if data:
         dur=data['dur']
@@ -1375,9 +1375,9 @@ async def handler(client: PyTgCalls, update: Update):
 @group_call.on_stream_end()
 async def handler(client: PyTgCalls, update: Update):
     if Config.LOOP:
-        #if str(update) == 'STREAM_AUDIO_ENDED':
+        if str(update) == 'STREAM_AUDIO_ENDED':
             #await manage_loop_audio()
-        #await manage_loop_vidwo()
+            await manage_loop_vidwo()
         if str(update) == 'STREAM_VIDEO_ENDED':
             await manage_loop_vidwo()
         return
