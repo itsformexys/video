@@ -417,25 +417,25 @@ async def clear_loop_cache():
 
 
 async def sync_to_db():
-    if not await db.is_saved("DATA"):
-        await db.new_config("DATA", Config.DATA)
-    if not await db.is_saved("LOOP"):
-        await db.new_config("LOOP", Config.LOOP)
+    if not db.is_saved("DATA"):
+        db.new_config("DATA", Config.DATA)
+    if not db.is_saved("LOOP"):
+        db.new_config("LOOP", Config.LOOP)
 
-    await db.edit_config("DATA", Config.DATA)
-    await db.edit_config("LOOP", Config.LOOP)
+    db.edit_config("DATA", Config.DATA)
+    db.edit_config("LOOP", Config.LOOP)
     
 
 
 
 async def sync_from_db():
-    if not await db.is_saved("DATA"):
-        await db.new_config("DATA", Config.DATA)
-    if not await db.is_saved("LOOP"):
-        await db.new_config("LOOP", Config.LOOP)
-    data=await db.get_config("DATA") 
+    if not db.is_saved("DATA"):
+        db.new_config("DATA", Config.DATA)
+    if not db.is_saved("LOOP"):
+        db.new_config("LOOP", Config.LOOP)
+    data=db.get_config("DATA") 
     Config.DATA = data
-    loop = await db.get_config("LOOP")
+    loop = db.get_config("LOOP")
     Config.LOOP=loop
     print("Loaded ", Config.DATA, Config.LOOP)
 
