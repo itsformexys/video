@@ -1,5 +1,5 @@
 from pyrogram import Client, filters
-from utils import audio_join_call, download, get_admins, get_duration, get_height_and_width, is_admin, is_radio, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, sync_to_db, video_join_call
+from utils import audio_join_call, clear_audio_cache, clear_video_cache, download, get_admins, get_duration, get_height_and_width, is_admin, is_radio, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, sync_to_db, video_join_call
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from youtube_search import YoutubeSearch
 from pyrogram import Client, filters
@@ -71,7 +71,6 @@ async def loopaplay(_, message: Message):
         ogdo=message.reply_to_message.audio.file_id
         await message.reply("Downloading..")
         file=await message.reply_to_message.download(file_name="./tgd/", progress=progress_bar, progress_args=(message.reply_to_message.audio.file_size, time.time(), msg))
-        Config.FILES['TG_AUDIO_FILE']=file
     if type=="youtube" or type=="query":
         if type=="youtube":
             msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
@@ -112,6 +111,9 @@ async def loopaplay(_, message: Message):
     elif type == 'radio':
         file=file
         ogdo = file
+    await clear_audio_cache()
+    if type=='audio':
+        Config.FILES['TG_AUDIO_FILE']=file
     Config.DATA["AUDIO_DETAILS"] = {"type":type, "link":file, 'oglink':ogdo}
     try:
         dur=get_duration(file)
@@ -119,11 +121,13 @@ async def loopaplay(_, message: Message):
         dur=0
     Config.DATA['AUDIO_DATA']={'dur':dur}
     k=await audio_join_call(file)
+    data=Config.DATA.get('VIDEO_DATA')
+    if data:
+        vlink=data['link']
+        await video_join_call(vlink)
     await message.reply(k)
     Config.LOOP=True
     await sync_to_db()
-
-
 
 
 @Client.on_message(filters.command(["video", f"video@{Config.BOT_USERNAME}"]) & (filters.chat(Config.CHAT) | filters.private))
@@ -194,7 +198,6 @@ async def addideoloop_to_playlist(_, message: Message):
         ogdo=m_video.file_id
         await message.reply("Downloading..")
         file=await message.reply_to_message.download(file_name="tgd/", progress=progress_bar, progress_args=(m_video.file_size, time.time(), msg))
-        Config.FILES['TG_VIDEO_FILE']=file
     elif type=="youtube" or type=="query":
         if type=="youtube":
             msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
@@ -245,6 +248,9 @@ async def addideoloop_to_playlist(_, message: Message):
     elif type == 'radio':
         file=file
         ogdo=file
+    await clear_video_cache()
+    if type == "video":
+        Config.FILES['TG_VIDEO_FILE']=file
     k=await video_join_call(file)
     await message.reply(k)
     Config.DATA["VIDEO_DETAILS"] = {"type":type, "link":file, "oglink":ogdo}

@@ -27,7 +27,7 @@ if not os.path.isdir("./downloads"):
 else:
     for f in os.listdir("./downloads"):
         os.remove(f"./downloads/{f}")
-        
+       
 if not os.path.isdir("./videodownloads"):
     os.makedirs("./videodownloads")
 else:
@@ -44,7 +44,7 @@ async def main():
     await bot.start()
     Config.BOT_USERNAME = (await bot.get_me()).username
     await group_call.start()
-    await start_stream()
+    #await start_stream()
     LOGGER.warning(f"{Config.BOT_USERNAME} Started.")
     await idle()
     LOGGER.warning("Stoping")

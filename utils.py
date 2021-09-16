@@ -356,6 +356,12 @@ async def download(song, msg=None):
                 await download(Config.playlist[1])
 
 async def clear_loop_cache():
+    await clear_audio_cache()
+    await clear_video_cache()
+    Config.LOOP=False
+    await sync_to_db()
+
+async def clear_video_cache():
     process = Config.FFMPEG_PROCESSES.get("VIDEO")
     if process:
         try:
@@ -376,6 +382,24 @@ async def clear_loop_cache():
         except Exception as e:
             print(e)
         del Config.FFMPEG_PROCESSES["VIDEO"]
+    files = ['RAW_VIDEO', 'TG_VIDEO_FILE']
+    for file in files:
+        f=Config.FILES.get(file)
+        if f:
+            del Config.FILES[file]
+            try:
+                os.remove(f)
+            except:
+                pass
+    details = ['VIDEO_DETAILS', 'VIDEO_DATA']
+    for data in details:
+        k=Config.DATA.get(data)
+        if k:            
+            del Config.DATA[data]
+            await sync_to_db()
+    await sync_to_db()
+
+async def clear_audio_cache():
     process = Config.FFMPEG_PROCESSES.get("AUDIO")
     if process:
         try:
@@ -396,7 +420,7 @@ async def clear_loop_cache():
         except Exception as e:
             print(e)
         del Config.FFMPEG_PROCESSES["AUDIO"]
-    files = ['RAW_AUDIO', 'RAW_VIDEO', 'TG_AUDIO_FILE', 'TG_VIDEO_FILE']
+    files = ['RAW_AUDIO', 'TG_AUDIO_FILE']
     for file in files:
         f=Config.FILES.get(file)
         if f:
@@ -405,15 +429,16 @@ async def clear_loop_cache():
                 os.remove(f)
             except:
                 pass
-    details = ['AUDIO_DETAILS', 'VIDEO_DETAILS', 'AUDIO_DATA', 'VIDEO_DATA']
+    details = ['AUDIO_DETAILS', 'AUDIO_DATA']
     for data in details:
         k=Config.DATA.get(data)
         if k:            
             del Config.DATA[data]
             await sync_to_db()
-    Config.LOOP=False
     Config.AUDIO_STATUS=False
     await sync_to_db()
+
+
 
 
 async def sync_to_db():
@@ -476,6 +501,9 @@ async def manage_loop_audio():
 
 async def manage_loop_vidwo():
     get_details = Config.DATA.get("VIDEO_DETAILS")
+    if not get_details:
+        await manage_loop_audio()
+        return 'No video specified'
     file_type=get_details['type']
     original_file=get_details['link']
     oglink=get_details['oglink']
@@ -709,7 +737,14 @@ async def video_join_call(link):
         await sleep(1)
     audio=Config.FILES.get("RAW_AUDIO")
     if not audio:
-        return "No audio playing"
+        get_data=Config.DATA.get('AUDIO_DETAILS')
+        if get_data:
+            audiolink=get_data['link']
+            await audio_join_call(audiolink)
+        else:
+            Config.LOOP=False
+            await sync_to_db()
+            return "No audio playing"
     if not os.path.exists(audio):
         await audio_join_call(audiolink)
         audio=Config.FILES.get("RAW_AUDIO")
