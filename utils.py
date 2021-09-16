@@ -774,9 +774,9 @@ async def video_join_call(link):
         return "This stream is not supported"    
     Config.DATA['VIDEO_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
     await sync_to_db()
-    """if not k:
+    if not k:
         if dur == 0:
-            command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
+            command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
             print("Live video found")
             process = await asyncio.create_subprocess_exec(
                 *command,
@@ -784,7 +784,7 @@ async def video_join_call(link):
                 stderr=asyncio.subprocess.STDOUT,
                 )
         else:
-            command = ["ffmpeg", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
+            command = ["ffmpeg", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
             print("Waiting for convertion")
             process = await asyncio.create_subprocess_exec(
                 *command,
@@ -793,14 +793,14 @@ async def video_join_call(link):
                 )
             await process.communicate()
         Config.FFMPEG_PROCESSES['VIDEO']=process
-    elif dur == 0:"""
-    command = ["ffmpeg", "-y", "-i", link, '-movflags', 'faststart', "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:-1', raw_video]
-    process = await asyncio.create_subprocess_exec(
-            *command,
-            stdout=ffmpeg_log,
-            stderr=asyncio.subprocess.STDOUT,
-            )
-    Config.FFMPEG_PROCESSES['VIDEO']=process
+    elif dur == 0:
+        command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
+        process = await asyncio.create_subprocess_exec(
+                *command,
+                stdout=ffmpeg_log,
+                stderr=asyncio.subprocess.STDOUT,
+                )
+        Config.FFMPEG_PROCESSES['VIDEO']=process
     while not os.path.exists(raw_video):
         await sleep(1)   
     data=Config.DATA.get('AUDIO_DATA')
@@ -837,8 +837,8 @@ async def video_join_call(link):
             InputVideoStream(
                 raw_video,
                 VideoParameters(
-                    width=640,
-                    height=360,
+                    width=width,
+                    height=height,
                     frame_rate=20,
                 ),
             ),
@@ -856,8 +856,8 @@ async def video_join_call(link):
             InputVideoStream(
                 raw_video,
                 VideoParameters(
-                    width=640,
-                    height=360,
+                    width=width,
+                    height=height,
                     frame_rate=20,
                 ),
             ),
