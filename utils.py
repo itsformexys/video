@@ -499,6 +499,83 @@ async def manage_loop_audio():
     await sync_to_db()
     Config.AUDIO_STATUS = True
 
+
+async def manage_restart():
+    get_details = Config.DATA.get("VIDEO_DETAILS")
+    file_type=get_details['type']
+    original_file=get_details['link']
+    oglink=get_details['oglink']
+    if file_type == "video":
+        original_file = await bot.download_media(oglink, file_name=f'./tgd/')
+        Config.FILES['TG_VIDEO_FILE'] = original_file
+    elif file_type == 'radio':
+        original_file=original_file
+    else:
+        def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
+        with YoutubeDL(def_ydl_opts) as ydl:
+            try:
+                ydl_info = ydl.extract_info(oglink, download=False)
+            except Exception as e:
+                LOGGER.error(f"Errors occured while getting link from youtube video {e}")
+                await update()
+                return
+            urlr=None
+            for each in ydl_info['formats']:
+                if each['width'] == 640 \
+                    and each['acodec'] != 'none' \
+                        and each['vcodec'] != 'none':
+                        urlr=each['url']
+                        break #prefer 640x360
+                elif each['width'] \
+                    and each['width'] <= 1280 \
+                        and each['acodec'] != 'none' \
+                            and each['vcodec'] != 'none':
+                            urlr=each['url']
+                            continue # any other format less than 1280
+                else:
+                    continue
+            if urlr:
+                file=urlr
+            original_file=urlr
+
+    Config.DATA['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    get_details = Config.DATA.get("AUDIO_DETAILS")
+    file_type=get_details['type']
+    original_file=get_details['link']
+    oglink=get_details['oglink']
+    if file_type == "audio":
+        original_file = await bot.download_media(oglink, file_name=f'./tgd/')
+        Config.FILES['TG_AUDIO_FILE'] = original_file
+    elif file_type == 'radio':
+        original_file=original_file
+    else:
+        def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
+        with YoutubeDL(def_ydl_opts) as ydl:
+            try:
+                ydl_info = ydl.extract_info(oglink, download=False)
+            except Exception as e:
+                LOGGER.error(f"Errors occured while getting link from youtube video {e}")
+            urlr=None
+            for each in ydl_info['formats']:
+                if each['acodec'] != 'none':
+                    urlr=each['url']
+                    break #prefer 640x360
+                else:
+                    continue
+            if not urlr:
+                await update()
+            original_file=urlr   
+    Config.DATA['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    await sync_to_db()
+    Config.AUDIO_STATUS = True
+    await video_join_call(original_file)
+    await sync_to_db()
+
+
+
+
+
+
 async def manage_loop_vidwo():
     get_details = Config.DATA.get("VIDEO_DETAILS")
     if not get_details:
@@ -1298,10 +1375,10 @@ async def handler(client: PyTgCalls, update: Update):
 @group_call.on_stream_end()
 async def handler(client: PyTgCalls, update: Update):
     if Config.LOOP:
-        if str(update) == 'STREAM_AUDIO_ENDED':
+        #if str(update) == 'STREAM_AUDIO_ENDED':
             #await manage_loop_audio()
-            await manage_loop_vidwo()
-        elif str(update) == 'STREAM_VIDEO_ENDED':
+        #await manage_loop_vidwo()
+        if str(update) == 'STREAM_VIDEO_ENDED':
             await manage_loop_vidwo()
         return
     if str(update) == "STREAM_AUDIO_ENDED" or str(update) == "STREAM_VIDEO_ENDED":
