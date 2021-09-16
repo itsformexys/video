@@ -692,14 +692,13 @@ async def audio_join_call(link):
             )
         Config.CALL_STATUS=True
     Config.AUDIO_STATUS=True
-    if not k:
-        old=Config.GET_FILE.get('old_audio')
-        if old:
-            for file in old:
-                try:
-                    os.remove(f"./audiodownloads/{file}")
-                except:
-                    pass
+    old=Config.GET_FILE.get('old_audio')
+    if old:
+        for file in old:
+            try:
+                os.remove(f"./audiodownloads/{file}")
+            except:
+                pass
     Config.FILES['RAW_AUDIO'] = raw_audio
     Config.AUDIO_STATUS=True
     try:
