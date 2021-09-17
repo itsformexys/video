@@ -659,9 +659,9 @@ async def audio_join_call(link):
             del Config.FFMPEG_PROCESSES["AUDIO"]
         except:
             pass
-    Config.GET_FILE["old_audio"] = os.listdir("audiodownloads")
+    Config.GET_FILE["old_audio"] = os.listdir("./audiodownloads")
     new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-    raw_audio=f"audiodownloads/{new}_audio.raw"
+    raw_audio=f"./audiodownloads/{new}_audio.raw"
     Config.FILES['RAW_AUDIO'] = raw_audio
     data=Config.DATA.get('AUDIO_DATA')
     print(raw_audio)
@@ -707,7 +707,7 @@ async def audio_join_call(link):
     if old:
         for file in old:
             try:
-                os.remove(f"audiodownloads/{file}")
+                os.remove(f"./audiodownloads/{file}")
             except:
                 pass
     Config.FILES['RAW_AUDIO'] = raw_audio
