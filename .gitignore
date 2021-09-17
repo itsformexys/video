@@ -4,3 +4,4 @@ test.py
 *.session
 *.session-journal
 utils1.py
+tst.py

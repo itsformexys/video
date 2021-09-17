@@ -1258,11 +1258,16 @@ def get_height_and_width(file):
 def is_radio(file):
     try:
         k=ffmpeg.probe(file)['streams']
+        if k:
+            return True
+        else:
+            return False
     except KeyError:
         return False
     except Exception as e:
         print("Strem Unsupported ", e)
         return False
+    
 
 
 @timeout(10)
