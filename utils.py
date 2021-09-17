@@ -835,13 +835,9 @@ async def get_video_raw(link):
     get_data=Config.DATA.get('AUDIO_DETAILS')
     if get_data:
         audiolink=get_data['link']
-        if not Config.AUDIO_STATUS or \
-            not Config.GET_FILE.get("RAW_AUDIO"):
-            print("No audio")
-            raw_audio=await get_audio_raw(audiolink)
-            if not raw_audio:
-                print("Audio file could not be created")
-                return False
+        raw_audio=await get_audio_raw(audiolink)
+        if not raw_audio:
+            print("Audio file could not be created")
     else:
         print("No audio")
         return False
