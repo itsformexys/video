@@ -635,6 +635,7 @@ async def manage_loop_vidwo():
 
 async def audio_join_call(link):
     await kill_process()
+    print("Truge")
     process = Config.FFMPEG_PROCESSES.get("AUDIO")
     if process:
         try:

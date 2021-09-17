@@ -117,6 +117,7 @@ async def loopaplay(_, message: Message):
         dur=get_duration(file)
     except:
         dur=0
+    print("Trigger")
     Config.DATA['AUDIO_DATA']={'dur':dur}
     k=await audio_join_call(file)
     data=Config.DATA.get('VIDEO_DETAILS')
