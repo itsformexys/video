@@ -582,6 +582,10 @@ async def manange_loopin_on_end():
         print("No audio")
         return
     video_deatils=Config.DATA.get('VIDEO_DETAILS')
+    if not video_deatils:
+        await audio_join_call(raw_audio, is_raw=True)
+        print("No video foyns")
+        return
     og_v_link=video_deatils['link']
     raw_audio, raw_video=await get_video_raw(og_v_link)
     if not raw_video:
