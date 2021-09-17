@@ -1379,9 +1379,6 @@ async def update():
 
 
 
-
-
-
 @group_call.on_raw_update()
 async def handler(client: PyTgCalls, update: Update):
     print(update, "raw")
@@ -1406,17 +1403,57 @@ async def handler(client: PyTgCalls, update: Update):
         Config.MUTED = True
     elif str(update) == 'UNMUTED_STREAM':
         Config.MUTED = False
+    elif str(update)== 'CHANGED_STREAM':
+        await sleep(2)
+        try:
+            call=group_call.get_call(Config.CHAT)
+        except GroupCallNotFound:
+            await manage_loop_vidwo()
+            return
+        except Exception as e:
+            LOGGER.warning(e)
+            await manage_loop_vidwo()
+            return
+        if str(call.status) != "playing":
+            await manage_loop_vidwo()  
+
 
 
 @group_call.on_stream_end()
 async def handler(client: PyTgCalls, update: Update):
-    print(update, "stream end")
+    print(update, "stream end")  
     if Config.LOOP:
         if str(update) == 'STREAM_AUDIO_ENDED':
             #await manage_loop_audio()
             await manage_loop_vidwo()
+            await sleep(1)
+            try:
+                call=group_call.get_call(Config.CHAT)
+            except GroupCallNotFound:
+                await manage_loop_vidwo()
+                return
+            except Exception as e:
+                LOGGER.warning(e)
+                await manage_loop_vidwo()
+                return
+            print(str(call.status), "Update call")
+            if str(call.status) != "playing":
+                await manage_loop_vidwo()  
         if str(update) == 'STREAM_VIDEO_ENDED':
             await manage_loop_vidwo()
+            await sleep(1)
+            try:
+                call=group_call.get_call(Config.CHAT)
+            except GroupCallNotFound:
+                await manage_loop_vidwo()
+                return
+            except Exception as e:
+                LOGGER.warning(e)
+                await manage_loop_vidwo()
+                return
+            if str(call.status) != "playing":
+                await manage_loop_vidwo()
+                return      
         return
     if str(update) == "STREAM_AUDIO_ENDED" or str(update) == "STREAM_VIDEO_ENDED":
         if not Config.STREAM_END.get("STATUS"):
