@@ -428,6 +428,8 @@ async def clear_audio_cache():
     await sync_to_db()
 
 
+
+
 async def sync_to_db():
     if not await db.is_saved("DATA"):
         db.add_config("DATA", Config.DATA)
@@ -623,7 +625,8 @@ async def manage_loop_vidwo():
 
 
 
-async def audio_join_call(link):
+
+async def get_audio_raw(oglink):
     await kill_process()
     process = Config.FFMPEG_PROCESSES.get("AUDIO")
     if process:
@@ -647,23 +650,21 @@ async def audio_join_call(link):
         try:
             del Config.FFMPEG_PROCESSES["AUDIO"]
         except:
-            pass
+            pass    
     Config.GET_FILE["old_audio"] = os.listdir("./audiodownloads")
     new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-    raw_audio=os.path.abspath(f"./audiodownloads/{new}_audio.raw")
-    Config.FILES['RAW_AUDIO'] = raw_audio
+    raw_audio=f"./audiodownloads/{new}_audio.raw"
     data=Config.DATA.get('AUDIO_DATA')
     if data:
         dur=data['dur']
     else:
         try:
-            dur=get_duration(link)
+            dur=get_duration(oglink)
         except:
             dur=0
         Config.DATA['AUDIO_DATA'] = {"dur": dur}
         await sync_to_db()
-    command = ['ffmpeg', '-y', '-i', link, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
-    
+    command = ['ffmpeg', '-y', '-i', oglink, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
     process = await asyncio.create_subprocess_exec(
         *command,
         stdout=ffmpeg_log,
@@ -672,50 +673,63 @@ async def audio_join_call(link):
     Config.FFMPEG_PROCESSES['AUDIO']=process
     while not os.path.exists(raw_audio):
         await sleep(1)
-    if Config.CALL_STATUS:
-        await group_call.change_stream(
-            int(Config.CHAT),
-            InputAudioStream(
-                raw_audio,
-                ),
-            )
-        if Config.EDIT_TITLE:
-            await edit_title()
+    Config.GET_FILE['RAW_AUDIO'] = raw_audio
+    return raw_audio
+
+
+async def audio_join_call(link, is_raw=False):
+    if not is_raw:
+        raw_audio=await get_audio_raw(link)
     else:
-        await group_call.join_group_call(
-            int(Config.CHAT),
-            InputAudioStream(
-                raw_audio,
-                ),
-            stream_type=StreamType().local_stream,
-            )
-        Config.CALL_STATUS=True
+        raw_audio=link
+    while not os.path.exists(raw_audio):
+        await sleep(1)
+    try:
+        if Config.CALL_STATUS:
+            await group_call.change_stream(
+                int(Config.CHAT),
+                InputAudioStream(
+                    raw_audio,
+                    ),
+                )
+            Config.CALL_STATUS=True
+        else:
+            await group_call.join_group_call(
+                int(Config.CHAT),
+                InputAudioStream(
+                    raw_audio,
+                    ),
+                stream_type=StreamType().local_stream,
+                )
+            Config.CALL_STATUS=True
+    except Exception as e:
+        print("Error while join audio,", str(e))
+        await sleep(2)
+        await audio_join_call(raw_audio, is_raw=True)
     Config.AUDIO_STATUS=True
     old=Config.GET_FILE.get('old_audio')
     if old:
         for file in old:
             try:
                 os.remove(f"./audiodownloads/{file}")
-            except:
+            except Exception as e:
+                print("errorin deleteting audio file", str(e))
                 pass
-    Config.FILES['RAW_AUDIO'] = raw_audio
-    Config.AUDIO_STATUS=True
     try:
         call=group_call.get_call(Config.CHAT)
     except GroupCallNotFound:
-        await audio_join_call(link)
+        await audio_join_call(raw_audio, is_raw=True)
         return
     except Exception as e:
         LOGGER.warning(e)
-        await audio_join_call(link)
+        await audio_join_call(raw_audio, is_raw=True)
         return
     if str(call.status) != "playing":
-        await audio_join_call(link)
+        await audio_join_call(raw_audio, is_raw=True)
     return "Started playing audio."
 
 
-
-async def video_join_call(link):
+async def get_video_raw(link):
     await kill_process()
     process = Config.FFMPEG_PROCESSES.get("VIDEO")
     if process:
@@ -735,16 +749,8 @@ async def video_join_call(link):
         except ProcessLookupError:
             pass
         except Exception as e:
-            print(e)
+            print("error in terminating dffmpeg at video", str(e))
         del Config.FFMPEG_PROCESSES["VIDEO"]
-    k=Config.FILES.get("RAW_VIDEO")
-    if k and os.path.exists(k):
-        raw_video=os.path.abspath(k) 
-    else:
-        Config.GET_FILE["old_video"] = os.listdir("./videodownloads")
-        new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-        raw_video=os.path.abspath(f"./videodownloads/{new}_video.raw")
-        Config.FILES["RAW_VIDEO"] = raw_video
     data=Config.DATA.get('VIDEO_DATA')
     if data:
         width=int(data['width'])
@@ -762,16 +768,28 @@ async def video_join_call(link):
             dur=0
     if not width or \
         not height:
-        Config.STREAM_LINK=False
+        print("No height 784 line ")
         Config.LOOP = False
         print("Exiting..")
-        await clear_loop_cache()
+        await clear_video_cache()
         await sync_to_db()
-        return "This stream is not supported"    
+        print("This stream is not supported"   )
+        return False 
     Config.DATA['VIDEO_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
     await sync_to_db()
     dtype=Config.DATA.get("VIDEO_DETAILS")
-    if not k:
+    k=Config.GET_FILE.get("RAW_VIDEO")
+    if k and \
+        os.path.exists(k) and \
+            dur != 0:
+            print("Raw video Exist")
+            raw_video=k
+    else:
+        print("Creating new file")
+        Config.GET_FILE["old_video"] = os.listdir("./videodownloads")
+        new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
+        raw_video=f"./videodownloads/{new}_video.raw"
+        Config.GET_FILE["RAW_VIDEO"] = raw_video
         if dur == 0 or dtype['type'] != 'audio':
             command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:360', raw_video]
             print("Live video found")
@@ -789,106 +807,120 @@ async def video_join_call(link):
                 stderr=asyncio.subprocess.PIPE,
                 )
             await process.communicate()
-        Config.FFMPEG_PROCESSES['VIDEO']=process
-    
-    elif dur == 0 or dtype['type'] != 'audio':
-        command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=scale=640:360', raw_video]
-        process = await asyncio.create_subprocess_exec(
-                *command,
-                stdout=ffmpeg_log,
-                stderr=asyncio.subprocess.STDOUT,
-                )
+            print("Coverted")
         Config.FFMPEG_PROCESSES['VIDEO']=process
     
     data=Config.DATA.get('AUDIO_DATA')
     if data:
         auddur=data['dur']
+    else:
+        print("No audio Found")
+        return False
     get_data=Config.DATA.get('AUDIO_DETAILS')
     if get_data:
         audiolink=get_data['link']
         if not Config.AUDIO_STATUS or \
-            not Config.FILES.get("RAW_AUDIO"):
+            not Config.GET_FILE.get("RAW_AUDIO"):
             print("No audio")
-            await audio_join_call(audiolink)
+            raw_audio=await get_audio_raw(audiolink)
+            if not raw_audio:
+                print("Audio file could not be created")
+                return False
     else:
         print("No audio")
-        return
-    if auddur == 0:
-        await audio_join_call(audiolink)
-        await sleep(1)
-    audio=Config.FILES.get("RAW_AUDIO")
-    if not audio:
-        Config.LOOP=False
-        await sync_to_db()
-        return print("No audio")
-    print("Reached ")
-    while not os.path.exists(raw_video):
+        return False
+    return raw_audio, raw_video
+
+
+
+async def video_join_call(link, raw_file=False):
+    if not raw_file:
+        raw_audio, raw_video = await get_video_raw(link)
+    else:
+        raw_audio = raw_file.get("audio")
+        raw_video = raw_file.get("video")
+    while not os.path.exists(raw_video) and \
+        not os.path.exists(raw_audio):
+        print("No audio and video found")
         await sleep(1)   
     if Config.CALL_STATUS:
-        await group_call.change_stream(
-            int(Config.CHAT),
-            InputAudioStream(
-                audio,
-                AudioParameters(
-                    bitrate=48000,
+        try:
+            await group_call.change_stream(
+                int(Config.CHAT),
+                InputAudioStream(
+                    raw_audio,
+                    AudioParameters(
+                        bitrate=48000,
+                    ),
                 ),
-            ),
-            InputVideoStream(
-                raw_video,
-                VideoParameters(
-                    width=640,
-                    height=360,
-                    frame_rate=20,
+                InputVideoStream(
+                    raw_video,
+                    VideoParameters(
+                        width=640,
+                        height=360,
+                        frame_rate=20,
+                    ),
                 ),
-            ),
-            )
-
+                )
+        except Exception as e:
+            print("Error in joing video", str(e))
+            await sleep(2)
+            dictd={'audio':raw_audio, 'video':raw_video}
+            await video_join_call(link, raw_file=dictd)
+            return
     else:
-        await group_call.join_group_call(
-            int(Config.CHAT),
-            InputAudioStream(
-                audio,
-                AudioParameters(
-                    bitrate=48000,
+        try:
+            await group_call.join_group_call(
+                int(Config.CHAT),
+                InputAudioStream(
+                    raw_audio,
+                    AudioParameters(
+                        bitrate=48000,
+                    ),
                 ),
-            ),
-            InputVideoStream(
-                raw_video,
-                VideoParameters(
-                    width=640,
-                    height=360,
-                    frame_rate=20,
+                InputVideoStream(
+                    raw_video,
+                    VideoParameters(
+                        width=640,
+                        height=360,
+                        frame_rate=20,
+                    ),
                 ),
-            ),
-            stream_type=StreamType().local_stream
-            )
-        Config.CALL_STATUS=True
-
+                stream_type=StreamType().local_stream
+                )
+            Config.CALL_STATUS=True
+        except Exception as e:
+            print("Error in joing video", str(e))
+            await sleep(2)
+            dictd={'audio':raw_audio, 'video':raw_video}
+            await video_join_call(link, raw_file=dictd)
+            return
     if Config.EDIT_TITLE:
         await edit_title()
     await sleep(1)  
-    Config.FILES["RAW_VIDEO"] = raw_video
-    if not k:
-        old=Config.GET_FILE.get("old_video")
-        if old:
-            for file in old:
-                os.remove(f"./videodownloads/{file}")
-            try:
-                del Config.GET_FILE["old_video"]
-            except:
-                LOGGER.error("Error in deletion")
-                pass
+    old=Config.GET_FILE.get("old_video")
+    if old:
+        for file in old:
+            os.remove(f"./videodownloads/{file}")
+        try:
+            del Config.GET_FILE["old_video"]
+        except:
+            LOGGER.error("Error in deletion")
+            pass
     try:
         call=group_call.get_call(Config.CHAT)
     except GroupCallNotFound:
-        await video_join_call(link)
+        dictd={'audio':raw_audio, 'video':raw_video}
+        await video_join_call(link, raw_file=dictd)
         return
     except Exception as e:
         LOGGER.warning(e)
-        await video_join_call(link)
+        dictd={'audio':raw_audio, 'video':raw_video}
+        await video_join_call(link, raw_file=dictd)
         return
     if str(call.status) != "playing":
-        await video_join_call(link)
+        dictd={'audio':raw_audio, 'video':raw_video}
+        await video_join_call(link, raw_file=dictd)
     return "Started playing video."
 
 
