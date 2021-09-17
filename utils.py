@@ -663,6 +663,7 @@ async def audio_join_call(link):
     raw_audio=f"audiodownloads/{new}_audio.raw"
     Config.FILES['RAW_AUDIO'] = raw_audio
     data=Config.DATA.get('AUDIO_DATA')
+    print(raw_audio)
     if data:
         dur=data['dur']
     else:
