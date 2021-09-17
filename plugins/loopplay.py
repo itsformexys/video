@@ -119,12 +119,12 @@ async def loopaplay(_, message: Message):
         dur=0
     print("Trigger")
     Config.DATA['AUDIO_DATA']={'dur':dur}
-    k=await audio_join_call(file)
+    await audio_join_call(file)
     data=Config.DATA.get('VIDEO_DETAILS')
     if data:
         vlink=data['link']
         await video_join_call(vlink)
-    await message.reply(k)
+    await message.reply("Started")
     Config.LOOP=True
     await sync_to_db()
 
@@ -252,8 +252,8 @@ async def addideoloop_to_playlist(_, message: Message):
     if type == "video":
         Config.FILES['TG_VIDEO_FILE']=file
     Config.DATA["VIDEO_DETAILS"] = {"type":type, "link":file, "oglink":ogdo}
-    k=await video_join_call(file)
-    await message.reply(k)    
+    await video_join_call(file)
+    await message.reply("Started Video")    
     Config.LOOP=True
     await sync_to_db()
 
