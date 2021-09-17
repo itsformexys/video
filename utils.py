@@ -1380,6 +1380,7 @@ async def update():
 
 @group_call.on_raw_update()
 async def handler(client: PyTgCalls, update: Update):
+    print(update, "raw")
     if str(update) == "JOINED_VOICE_CHAT":
         Config.CALL_STATUS = True
         if Config.EDIT_TITLE:
@@ -1405,6 +1406,7 @@ async def handler(client: PyTgCalls, update: Update):
 
 @group_call.on_stream_end()
 async def handler(client: PyTgCalls, update: Update):
+    print(update, "stream end")
     if Config.LOOP:
         if str(update) == 'STREAM_AUDIO_ENDED':
             #await manage_loop_audio()
