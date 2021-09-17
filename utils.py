@@ -378,6 +378,7 @@ async def clear_video_cache():
                 os.remove(f)
             except:
                 pass
+            del Config.FILES[file]
     details = ['VIDEO_DETAILS', 'VIDEO_DATA']
     for data in details:
         k=Config.DATA.get(data)
@@ -416,6 +417,7 @@ async def clear_audio_cache():
                 os.remove(f)
             except:
                 pass
+            del Config.FILES[file]
     details = ['AUDIO_DETAILS', 'AUDIO_DATA']
     for data in details:
         k=Config.DATA.get(data)
@@ -424,8 +426,6 @@ async def clear_audio_cache():
             await sync_to_db()
     Config.AUDIO_STATUS=False
     await sync_to_db()
-
-
 
 
 async def sync_to_db():
