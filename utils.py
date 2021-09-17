@@ -12,6 +12,7 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+from logger import LOGGER
 try:
     from pytgcalls.types.input_stream import InputAudioStream, InputVideoStream, AudioParameters, VideoParameters
     from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
@@ -33,7 +34,7 @@ try:
     from config import Config
     from asyncio import sleep
     from signal import SIGINT
-    from logger import LOGGER
+
     from bot import bot
     import subprocess
     import asyncio

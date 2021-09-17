@@ -12,10 +12,9 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+from logger import LOGGER
 from utils import manage_loop_vidwo, manage_restart, start_stream, sync_from_db
 from user import group_call
-from logger import LOGGER
 from config import Config
 from pyrogram import idle
 from bot import bot
