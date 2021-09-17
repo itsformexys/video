@@ -662,7 +662,7 @@ async def audio_join_call(link):
             dur=0
         Config.DATA['AUDIO_DATA'] = {"dur": dur}
         await sync_to_db()
-    command = ['ffmpeg', '-i', link, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
+    command = ['ffmpeg', '-y', '-i', link, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
     
     process = await asyncio.create_subprocess_exec(
         *command,
@@ -781,7 +781,7 @@ async def video_join_call(link):
                 stderr=asyncio.subprocess.STDOUT,
                 )
         else:
-            command = ["ffmpeg", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=scale=640:360', raw_video]
+            command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=scale=640:360', raw_video]
             print("Waiting for convertion")
             process = await asyncio.create_subprocess_exec(
                 *command,
