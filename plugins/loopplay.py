@@ -121,7 +121,7 @@ async def loopaplay(_, message: Message):
         dur=0
     Config.DATA['AUDIO_DATA']={'dur':dur}
     k=await audio_join_call(file)
-    data=Config.DATA.get('VIDEO_DATA')
+    data=Config.DATA.get('VIDEO_DETAILS')
     if data:
         vlink=data['link']
         await video_join_call(vlink)

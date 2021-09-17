@@ -12,11 +12,10 @@
 
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
+from logger import LOGGER
 try:
    import os
-   import re
-   from logger import LOGGER
+   import re  
    import heroku3
 
 except ModuleNotFoundError:
@@ -163,9 +162,5 @@ These are commands to control player.
     Command: <b>/update</b> or <b>/restart</b>
  2. Get Logs
     Command: <b>/logs</b>
-
-<b>How Can I Stream In My Group</b>
-  <i>The source code of this bot is public and can be found at <a href=https://github.com/subinps/VCPlayerBot>VCPlayerBot.</a>\nYou can deploy your own bot and use in your group.</i>
-
 """
 
