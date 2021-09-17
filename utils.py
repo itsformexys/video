@@ -1,17 +1,3 @@
-#!/usr/bin/env python3
-# Copyright (C) @subinps
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU Affero General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU Affero General Public License for more details.
-
-# You should have received a copy of the GNU Affero General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from logger import LOGGER
 try:
     from pytgcalls.types.input_stream import InputAudioStream, InputVideoStream, AudioParameters, VideoParameters
@@ -502,6 +488,7 @@ async def manage_loop_audio():
 
 
 async def manage_restart():
+
     get_details = Config.DATA.get("AUDIO_DETAILS")
     if not get_details:
         print("Nothing found")
@@ -583,6 +570,9 @@ async def manage_restart():
 
 
 
+
+
+
 async def manage_loop_vidwo():
     get_details = Config.DATA.get("VIDEO_DETAILS")
     if not get_details:
@@ -635,7 +625,6 @@ async def manage_loop_vidwo():
 
 async def audio_join_call(link):
     await kill_process()
-    print("Truge")
     process = Config.FFMPEG_PROCESSES.get("AUDIO")
     if process:
         try:
@@ -661,10 +650,9 @@ async def audio_join_call(link):
             pass
     Config.GET_FILE["old_audio"] = os.listdir("./audiodownloads")
     new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-    raw_audio=f"./audiodownloads/{new}_audio.raw"
+    raw_audio=os.path.abspath(f"./audiodownloads/{new}_audio.raw")
     Config.FILES['RAW_AUDIO'] = raw_audio
     data=Config.DATA.get('AUDIO_DATA')
-    print(raw_audio)
     if data:
         dur=data['dur']
     else:
@@ -674,7 +662,8 @@ async def audio_join_call(link):
             dur=0
         Config.DATA['AUDIO_DATA'] = {"dur": dur}
         await sync_to_db()
-    command = ['ffmpeg', 'y', '-i', link, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
+    command = ['ffmpeg', '-i', link, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
+    
     process = await asyncio.create_subprocess_exec(
         *command,
         stdout=ffmpeg_log,
@@ -682,7 +671,6 @@ async def audio_join_call(link):
         )
     Config.FFMPEG_PROCESSES['AUDIO']=process
     while not os.path.exists(raw_audio):
-        print("Sleeping")
         await sleep(1)
     if Config.CALL_STATUS:
         await group_call.change_stream(
@@ -751,11 +739,11 @@ async def video_join_call(link):
         del Config.FFMPEG_PROCESSES["VIDEO"]
     k=Config.FILES.get("RAW_VIDEO")
     if k and os.path.exists(k):
-        raw_video=k
+        raw_video=os.path.abspath(k) 
     else:
         Config.GET_FILE["old_video"] = os.listdir("./videodownloads")
         new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-        raw_video=f"videodownloads/{new}_video.raw"
+        raw_video=os.path.abspath(f"./videodownloads/{new}_video.raw")
         Config.FILES["RAW_VIDEO"] = raw_video
     data=Config.DATA.get('VIDEO_DATA')
     if data:
@@ -793,7 +781,7 @@ async def video_join_call(link):
                 stderr=asyncio.subprocess.STDOUT,
                 )
         else:
-            command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=scale=640:360', raw_video]
+            command = ["ffmpeg", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=scale=640:360', raw_video]
             print("Waiting for convertion")
             process = await asyncio.create_subprocess_exec(
                 *command,
@@ -884,7 +872,6 @@ async def video_join_call(link):
         old=Config.GET_FILE.get("old_video")
         if old:
             for file in old:
-                print(file)
                 os.remove(f"./videodownloads/{file}")
             try:
                 del Config.GET_FILE["old_video"]
