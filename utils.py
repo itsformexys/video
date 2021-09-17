@@ -662,9 +662,9 @@ async def audio_join_call(link):
             del Config.FFMPEG_PROCESSES["AUDIO"]
         except:
             pass
-    Config.GET_FILE["old_audio"] = os.listdir("./audiodownloads")
+    Config.GET_FILE["old_audio"] = os.listdir("audiodownloads")
     new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-    raw_audio=os.path.abspath(f"./audiodownloads/{new}_audio.raw")
+    raw_audio=f"audiodownloads/{new}_audio.raw"
     Config.FILES['RAW_AUDIO'] = raw_audio
     data=Config.DATA.get('AUDIO_DATA')
     if data:
@@ -709,7 +709,7 @@ async def audio_join_call(link):
     if old:
         for file in old:
             try:
-                os.remove(f"./audiodownloads/{file}")
+                os.remove(f"audiodownloads/{file}")
             except:
                 pass
     Config.FILES['RAW_AUDIO'] = raw_audio
@@ -753,11 +753,11 @@ async def video_join_call(link):
         del Config.FFMPEG_PROCESSES["VIDEO"]
     k=Config.FILES.get("RAW_VIDEO")
     if k and os.path.exists(k):
-        raw_video=os.path.abspath(k) 
+        raw_video=k
     else:
         Config.GET_FILE["old_video"] = os.listdir("./videodownloads")
         new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-        raw_video=os.path.abspath(f"./videodownloads/{new}_video.raw")
+        raw_video=f"videodownloads/{new}_video.raw"
         Config.FILES["RAW_VIDEO"] = raw_video
     data=Config.DATA.get('VIDEO_DATA')
     if data:
