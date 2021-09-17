@@ -348,7 +348,7 @@ async def clear_loop_cache():
     Config.LOOP=False
     await sync_to_db()
 
-async def clear_video_cache():
+async def clear_video_cache(delete=True):
     process = Config.FFMPEG_PROCESSES.get("VIDEO")
     if process:
         try:
@@ -376,11 +376,14 @@ async def clear_video_cache():
     for file in files:
         f=Config.FILES.get(file)
         if f:
-            try:
-                os.remove(f)
-            except:
-                pass
+            if delete:
+                try:
+                    os.remove(f)
+                except:
+                    pass
             del Config.FILES[file]
+    if Config.GET_FILE.get('RAW_VIDEO'):
+        del Config.GET_FILE['RAW_VIDEO']
     details = ['VIDEO_DETAILS', 'VIDEO_DATA']
     for data in details:
         k=Config.DATA.get(data)
@@ -389,7 +392,7 @@ async def clear_video_cache():
             await sync_to_db()
     await sync_to_db()
 
-async def clear_audio_cache():
+async def clear_audio_cache(delete=True):
     process = Config.FFMPEG_PROCESSES.get("AUDIO")
     if process:
         try:
@@ -415,10 +418,13 @@ async def clear_audio_cache():
         f=Config.FILES.get(file)
         if f:
             del Config.FILES[file]
-            try:
-                os.remove(f)
-            except:
-                pass
+            if delete:
+                try:
+                    os.remove(f)
+                except:
+                    pass
+    if Config.GET_FILE.get('RAW_AUDIO'):
+        del Config.GET_FILE['RAW_AUDIO']
     details = ['AUDIO_DETAILS', 'AUDIO_DATA']
     for data in details:
         k=Config.DATA.get(data)

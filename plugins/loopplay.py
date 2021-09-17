@@ -11,6 +11,7 @@ from config import Config
 from logger import LOGGER
 from asyncio import sleep
 import re
+import os
 import time
 admin_filter=filters.create(is_admin) 
 
@@ -114,7 +115,13 @@ async def loopaplay(_, message: Message):
     else:
         await message.reply("Unsupported URL")
         return
-    await clear_audio_cache()
+    await clear_audio_cache(delete=False)
+    existing=Config.FILES.get("TG_AUDIO_FILE")
+    if existing:
+        try:
+            os.remove(existing)
+        except:
+            pass
     if type=='audio':
         Config.FILES['TG_AUDIO_FILE']=file
     Config.DATA["AUDIO_DETAILS"] = {"type":type, "link":file, 'oglink':ogdo}
@@ -254,7 +261,13 @@ async def addideoloop_to_playlist(_, message: Message):
     elif type == 'radio':
         file=file
         ogdo=file
-    await clear_video_cache()
+    await clear_video_cache(delete=False)
+    existing=Config.FILES.get("TG_VIDEO_FILE")
+    if existing:
+        try:
+            os.remove(existing)
+        except:
+            pass
     if type == "video":
         Config.FILES['TG_VIDEO_FILE']=file
     Config.DATA["VIDEO_DETAILS"] = {"type":type, "link":file, "oglink":ogdo}
