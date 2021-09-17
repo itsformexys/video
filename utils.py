@@ -658,7 +658,7 @@ async def audio_join_call(link):
             pass
     Config.GET_FILE["old_audio"] = os.listdir("./audiodownloads")
     new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-    raw_audio=f"./audiodownloads/{new}_audio.raw"
+    raw_audio=os.path.abspath(f"./audiodownloads/{new}_audio.raw")
     Config.FILES['RAW_AUDIO'] = raw_audio
     data=Config.DATA.get('AUDIO_DATA')
     if data:
@@ -751,7 +751,7 @@ async def video_join_call(link):
     else:
         Config.GET_FILE["old_video"] = os.listdir("./videodownloads")
         new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
-        raw_video=f"./videodownloads/{new}_video.raw"
+        raw_video=os.path.abspath(f"./videodownloads/{new}_video.raw")
         Config.FILES["RAW_VIDEO"] = raw_video
     data=Config.DATA.get('VIDEO_DATA')
     if data:
@@ -781,7 +781,7 @@ async def video_join_call(link):
     dtype=Config.DATA.get("VIDEO_DETAILS")
     if not k:
         if dur == 0 or dtype['type'] != 'audio':
-            command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
+            command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=640:360', raw_video]
             print("Live video found")
             process = await asyncio.create_subprocess_exec(
                 *command,
@@ -789,7 +789,7 @@ async def video_join_call(link):
                 stderr=asyncio.subprocess.STDOUT,
                 )
         else:
-            command = ["ffmpeg", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
+            command = ["ffmpeg", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=scale=640:360', raw_video]
             print("Waiting for convertion")
             process = await asyncio.create_subprocess_exec(
                 *command,
@@ -800,7 +800,7 @@ async def video_join_call(link):
         Config.FFMPEG_PROCESSES['VIDEO']=process
     
     elif dur == 0 or dtype['type'] != 'audio':
-        command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
+        command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=scale=640:360', raw_video]
         process = await asyncio.create_subprocess_exec(
                 *command,
                 stdout=ffmpeg_log,
@@ -843,8 +843,8 @@ async def video_join_call(link):
             InputVideoStream(
                 raw_video,
                 VideoParameters(
-                    width=width,
-                    height=height,
+                    width=640,
+                    height=360,
                     frame_rate=20,
                 ),
             ),
@@ -862,8 +862,8 @@ async def video_join_call(link):
             InputVideoStream(
                 raw_video,
                 VideoParameters(
-                    width=width,
-                    height=height,
+                    width=640,
+                    height=360,
                     frame_rate=20,
                 ),
             ),
