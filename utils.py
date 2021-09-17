@@ -695,8 +695,11 @@ async def audio_join_call(link):
             InputStream(
                 InputAudioStream(
                     raw_audio,
+                    AudioParameters(
+                        bitrate=48000,
                     ),
-            )
+                ),
+                ),
             )
         if Config.EDIT_TITLE:
             await edit_title()
@@ -706,8 +709,11 @@ async def audio_join_call(link):
             InputStream(
                 InputAudioStream(
                     raw_audio,
+                    AudioParameters(
+                        bitrate=48000,
                     ),
-            ),
+                ),
+                ),
             stream_type=StreamType().local_stream,
             )
         Config.CALL_STATUS=True
