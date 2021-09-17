@@ -1273,6 +1273,21 @@ def get_duration(file):
         return total
     except:
         return 0
+@timeout(10)
+def is_audio_codec(ydl_info):
+    urlr=None
+    for each in ydl_info['formats']:
+        if each['acodec'] != 'none':
+            urlr=each['url']
+            break #prefer 640x360
+        else:
+            continue
+    if urlr:
+        return urlr
+    else:
+        return False
+
+
 
 def humanbytes(size):
     if not size:

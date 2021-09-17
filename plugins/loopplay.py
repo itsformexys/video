@@ -1,5 +1,5 @@
 from pyrogram import Client, filters
-from utils import audio_join_call, clear_audio_cache, clear_video_cache, download, get_admins, get_duration, get_height_and_width, is_admin, is_radio, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, sync_to_db, video_join_call
+from utils import audio_join_call, clear_audio_cache, clear_video_cache, download, get_admins, get_duration, get_height_and_width, is_admin, is_audio_codec, is_radio, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, sync_to_db, video_join_call
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from youtube_search import YoutubeSearch
 from pyrogram import Client, filters
@@ -99,14 +99,12 @@ async def loopaplay(_, message: Message):
                 return await message.reply("I was unable to download that audio.")
             urlr=None
             ogdo=url
-            for each in ydl_info['formats']:
-                if each['acodec'] != 'none':
-                    urlr=each['url']
-                    break #prefer 640x360
-                else:
-                    continue
+            try:
+                urlr=is_audio_codec(ydl_info)
+            except:
+                urlr=None
             if not urlr:
-                await message.reply("I was unable to download that audio.")
+                return await message.reply("I was unable to download that audio.")
         file=urlr
     elif type == 'radio':
         file=file
