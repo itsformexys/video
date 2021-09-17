@@ -250,9 +250,9 @@ async def addideoloop_to_playlist(_, message: Message):
     await clear_video_cache()
     if type == "video":
         Config.FILES['TG_VIDEO_FILE']=file
-    k=await video_join_call(file)
-    await message.reply(k)
     Config.DATA["VIDEO_DETAILS"] = {"type":type, "link":file, "oglink":ogdo}
+    k=await video_join_call(file)
+    await message.reply(k)    
     Config.LOOP=True
     await sync_to_db()
 
