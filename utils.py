@@ -680,6 +680,7 @@ async def audio_join_call(link):
         )
     Config.FFMPEG_PROCESSES['AUDIO']=process
     while not os.path.exists(raw_audio):
+        print("Sleeping")
         await sleep(1)
     if Config.CALL_STATUS:
         await group_call.change_stream(
