@@ -777,8 +777,9 @@ async def video_join_call(link):
         return "This stream is not supported"    
     Config.DATA['VIDEO_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
     await sync_to_db()
+    dtype=Config.DATA.get("VIDEO_DETAILS")
     if not k:
-        if dur == 0:
+        if dur == 0 or dtype['type'] != 'audio':
             command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
             print("Live video found")
             process = await asyncio.create_subprocess_exec(
@@ -796,7 +797,8 @@ async def video_join_call(link):
                 )
             await process.communicate()
         Config.FFMPEG_PROCESSES['VIDEO']=process
-    elif dur == 0:
+    
+    elif dur == 0 or dtype['type'] != 'audio':
         command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale={width}:{height}', raw_video]
         process = await asyncio.create_subprocess_exec(
                 *command,

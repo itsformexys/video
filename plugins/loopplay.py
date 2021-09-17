@@ -73,11 +73,11 @@ async def loopaplay(_, message: Message):
         file=await message.reply_to_message.download(file_name="./tgd/", progress=progress_bar, progress_args=(message.reply_to_message.audio.file_size, time.time(), msg))
     if type=="youtube" or type=="query":
         if type=="youtube":
-            msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
+            msg = await message.reply_text("⚡️ **Fetching Audio From YouTube...**")
             url=yturl
         elif type=="query":
             try:
-                msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
+                msg = await message.reply_text("⚡️ **Searching Audio From YouTube...**")
                 ytquery=ysearch
                 results = YoutubeSearch(ytquery, max_results=1).to_dict()
                 url = f"https://youtube.com{results[0]['url_suffix']}"
