@@ -722,7 +722,10 @@ async def audio_join_call(link, is_raw=False):
                 int(Config.CHAT),
                 InputAudioStream(
                     raw_audio,
+                    AudioParameters(
+                        bitrate=48000,
                     ),
+                ),
                 )
             Config.CALL_STATUS=True
         else:
@@ -730,7 +733,10 @@ async def audio_join_call(link, is_raw=False):
                 int(Config.CHAT),
                 InputAudioStream(
                     raw_audio,
+                    AudioParameters(
+                        bitrate=48000,
                     ),
+                ),
                 stream_type=StreamType().local_stream,
                 )
             Config.CALL_STATUS=True
