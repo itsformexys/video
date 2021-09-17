@@ -368,12 +368,14 @@ async def clear_video_cache():
             pass
         except Exception as e:
             print(e)
-        del Config.FFMPEG_PROCESSES["VIDEO"]
+        try:
+            del Config.FFMPEG_PROCESSES["VIDEO"]
+        except:
+            pass
     files = ['RAW_VIDEO', 'TG_VIDEO_FILE']
     for file in files:
         f=Config.FILES.get(file)
         if f:
-            del Config.FILES[file]
             try:
                 os.remove(f)
             except:
@@ -417,7 +419,6 @@ async def clear_audio_cache():
                 os.remove(f)
             except:
                 pass
-            del Config.FILES[file]
     details = ['AUDIO_DETAILS', 'AUDIO_DATA']
     for data in details:
         k=Config.DATA.get(data)
