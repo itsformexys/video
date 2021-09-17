@@ -132,11 +132,11 @@ async def loopaplay(_, message: Message):
     print("Trigger")
     Config.DATA['AUDIO_DATA']={'dur':dur}
     await audio_join_call(file)
-    data=Config.DATA.get('VIDEO_DETAILS')
+    """data=Config.DATA.get('VIDEO_DETAILS')
     await sleep(2)
     if data:
         vlink=data['link']
-        await video_join_call(vlink)
+        await video_join_call(vlink)"""
     await message.reply("Started")
     Config.LOOP=True
     await sync_to_db()

@@ -430,7 +430,6 @@ async def clear_audio_cache(delete=True):
         k=Config.DATA.get(data)
         if k:            
             del Config.DATA[data]
-            await sync_to_db()
     Config.AUDIO_STATUS=False
     await sync_to_db()
 
