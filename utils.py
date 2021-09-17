@@ -1430,14 +1430,17 @@ async def handler(client: PyTgCalls, update: Update):
             try:
                 call=group_call.get_call(Config.CHAT)
             except GroupCallNotFound:
+                Config.CALL_STATUS = False
                 await manage_loop_vidwo()
                 return
             except Exception as e:
                 LOGGER.warning(e)
+                Config.CALL_STATUS = False
                 await manage_loop_vidwo()
                 return
             print(str(call.status), "Update call")
             if str(call.status) != "playing":
+                Config.CALL_STATUS = False
                 await manage_loop_vidwo()  
         if str(update) == 'STREAM_VIDEO_ENDED':
             await manage_loop_vidwo()
@@ -1445,13 +1448,16 @@ async def handler(client: PyTgCalls, update: Update):
             try:
                 call=group_call.get_call(Config.CHAT)
             except GroupCallNotFound:
+                Config.CALL_STATUS = False
                 await manage_loop_vidwo()
                 return
             except Exception as e:
+                Config.CALL_STATUS = False
                 LOGGER.warning(e)
                 await manage_loop_vidwo()
                 return
             if str(call.status) != "playing":
+                Config.CALL_STATUS = False
                 await manage_loop_vidwo()
                 return      
         return
