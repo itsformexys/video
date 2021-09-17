@@ -493,7 +493,9 @@ async def manage_loop_audio():
 async def manage_restart():
     get_details = Config.DATA.get("AUDIO_DETAILS")
     if not get_details:
-        print("Nothing found")
+        Config.LOOP=False
+        await clear_audio_cache()
+        print("Nothing audio found")
         return
     file_type=get_details['type']
     original_file=get_details['link']
@@ -569,6 +571,11 @@ async def manage_restart():
 
 async def manange_loopin_on_end():
     audio_details = Config.DATA.get('AUDIO_DETAILS')
+    if not audio_details:
+        Config.LOOP=False
+        await sync_to_db()
+        print("Nothing to loop")
+        return
     link=audio_details['link']
     raw_audio=await get_audio_raw(link)
     if not raw_audio:

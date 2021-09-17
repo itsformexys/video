@@ -90,6 +90,7 @@ async def loopaplay(_, message: Message):
                 return
         else:
             await message.reply("I was unable to download that audio.")
+            return
         def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
         with YoutubeDL(def_ydl_opts) as ydl:
             try:
@@ -109,6 +110,9 @@ async def loopaplay(_, message: Message):
     elif type == 'radio':
         file=file
         ogdo = file
+    else:
+        await message.reply("Unsupported URL")
+        return
     await clear_audio_cache()
     if type=='audio':
         Config.FILES['TG_AUDIO_FILE']=file
