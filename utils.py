@@ -490,7 +490,6 @@ async def manage_loop_audio():
 
 
 async def manage_restart():
-
     get_details = Config.DATA.get("AUDIO_DETAILS")
     if not get_details:
         print("Nothing found")
@@ -522,11 +521,9 @@ async def manage_restart():
             original_file=urlr   
     Config.DATA['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
     await sync_to_db()
-    Config.AUDIO_STATUS = True
-    await audio_join_call(original_file)
-
     get_details = Config.DATA.get("VIDEO_DETAILS")
     if not get_details:
+        await manange_loopin_on_end()
         print("No Video")
         return
     file_type=get_details['type']
@@ -567,8 +564,26 @@ async def manage_restart():
     
     Config.DATA['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
     await sync_to_db()
-    await video_join_call(original_file)
-    await sync_to_db()
+    await manange_loopin_on_end()
+
+async def manange_loopin_on_end():
+    audio_details = Config.DATA.get('AUDIO_DETAILS')
+    link=audio_details['link']
+    raw_audio=await get_audio_raw(link)
+    if not raw_audio:
+        print("No audio")
+        return
+    video_deatils=Config.DATA.get('VIDEO_DETAILS')
+    og_v_link=video_deatils['link']
+    raw_video=await get_video_raw(og_v_link)
+    if not raw_video:
+        await audio_join_call(raw_audio, is_raw=True)
+        print("No video foyns")
+        return
+    dictd={'audio':raw_audio, 'video':raw_video}
+    await video_join_call(link, raw_file=dictd)
+    
+    
 
 
 
@@ -1426,14 +1441,16 @@ async def handler(client: PyTgCalls, update: Update):
         try:
             call=group_call.get_call(Config.CHAT)
         except GroupCallNotFound:
-            await manage_loop_vidwo()
+            print("No gc")
+            #await manage_loop_vidwo()
             return
         except Exception as e:
             LOGGER.warning(e)
-            await manage_loop_vidwo()
+            #await manage_loop_vidwo()
             return
         if str(call.status) != "playing":
-            await manage_loop_vidwo()  
+            print("Not playing")
+            #await manage_loop_vidwo()  
 
 
 
@@ -1443,40 +1460,40 @@ async def handler(client: PyTgCalls, update: Update):
     if Config.LOOP:
         if str(update) == 'STREAM_AUDIO_ENDED':
             #await manage_loop_audio()
-            await manage_loop_vidwo()
+            await manange_loopin_on_end()
             await sleep(1)
             try:
                 call=group_call.get_call(Config.CHAT)
             except GroupCallNotFound:
                 Config.CALL_STATUS = False
-                await manage_loop_vidwo()
+                await manange_loopin_on_end()
                 return
             except Exception as e:
                 LOGGER.warning(e)
                 Config.CALL_STATUS = False
-                await manage_loop_vidwo()
+                await manange_loopin_on_end()
                 return
             print(str(call.status), "Update call")
             if str(call.status) != "playing":
                 Config.CALL_STATUS = False
-                await manage_loop_vidwo()  
+                await manange_loopin_on_end()
         if str(update) == 'STREAM_VIDEO_ENDED':
-            await manage_loop_vidwo()
+            await manange_loopin_on_end()
             await sleep(1)
             try:
                 call=group_call.get_call(Config.CHAT)
             except GroupCallNotFound:
                 Config.CALL_STATUS = False
-                await manage_loop_vidwo()
+                await manange_loopin_on_end()
                 return
             except Exception as e:
                 Config.CALL_STATUS = False
                 LOGGER.warning(e)
-                await manage_loop_vidwo()
+                await manange_loopin_on_end()
                 return
             if str(call.status) != "playing":
                 Config.CALL_STATUS = False
-                await manage_loop_vidwo()
+                await manange_loopin_on_end()
                 return      
         return
     if str(update) == "STREAM_AUDIO_ENDED" or str(update) == "STREAM_VIDEO_ENDED":
