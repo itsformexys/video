@@ -854,6 +854,9 @@ async def video_join_call(link, raw_file=False):
     else:
         raw_audio = raw_file.get("audio")
         raw_video = raw_file.get("video")
+    print(raw_file)
+    print(raw_audio)
+    print(raw_video)
     while not os.path.exists(raw_video) and \
         not os.path.exists(raw_audio):
         print("No audio and video found")
