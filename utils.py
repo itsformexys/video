@@ -627,7 +627,10 @@ async def manage_loop_vidwo():
                     continue
             if urlr:
                 file=urlr
-            original_file=urlr
+                original_file=urlr
+            else:
+                print("Video Not fund")
+                return
     Config.DATA['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
     await video_join_call(original_file)
     await sync_to_db()
@@ -749,8 +752,8 @@ async def video_join_call(link):
             print(e)
         del Config.FFMPEG_PROCESSES["VIDEO"]
     k=Config.FILES.get("RAW_VIDEO")
-    if k:
-        raw_video=k 
+    if k and os.path.exists(k):
+        raw_video=os.path.abspath(k) 
     else:
         Config.GET_FILE["old_video"] = os.listdir("./videodownloads")
         new = datetime.now().strftime("%d-%m-%Y-%H:%M:%S")
@@ -810,8 +813,7 @@ async def video_join_call(link):
                 stderr=asyncio.subprocess.STDOUT,
                 )
         Config.FFMPEG_PROCESSES['VIDEO']=process
-    while not os.path.exists(raw_video):
-        await sleep(1)   
+    
     data=Config.DATA.get('AUDIO_DATA')
     if data:
         auddur=data['dur']
@@ -834,6 +836,8 @@ async def video_join_call(link):
         await sync_to_db()
         return print("No audio")
     print("Reached ")
+    while not os.path.exists(raw_video):
+        await sleep(1)   
     if Config.CALL_STATUS:
         await group_call.change_stream(
             int(Config.CHAT),
