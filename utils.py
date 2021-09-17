@@ -797,7 +797,7 @@ async def get_video_raw(link):
         await clear_video_cache()
         await sync_to_db()
         print("This stream is not supported"   )
-        return False 
+        return False, False
     Config.DATA['VIDEO_DATA']={"file":link, "width":width, "height":height, 'dur':dur}
     await sync_to_db()
     dtype=Config.DATA.get("VIDEO_DETAILS")
@@ -838,7 +838,7 @@ async def get_video_raw(link):
         auddur=data['dur']
     else:
         print("No audio Found")
-        return False
+        return False, False
     get_data=Config.DATA.get('AUDIO_DETAILS')
     if get_data:
         audiolink=get_data['link']
@@ -847,7 +847,7 @@ async def get_video_raw(link):
             print("Audio file could not be created")
     else:
         print("No audio")
-        return False
+        return False, False
     return raw_audio, raw_video
 
 
@@ -855,6 +855,9 @@ async def get_video_raw(link):
 async def video_join_call(link, raw_file=False):
     if not raw_file:
         raw_audio, raw_video = await get_video_raw(link)
+        if not raw_audio:
+            print("Errors occured while getting data")
+            return
     else:
         raw_audio = raw_file.get("audio")
         raw_video = raw_file.get("video")

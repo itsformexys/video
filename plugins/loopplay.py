@@ -9,6 +9,7 @@ from datetime import datetime
 from pyrogram import filters
 from config import Config
 from logger import LOGGER
+from asyncio import sleep
 import re
 import time
 admin_filter=filters.create(is_admin) 
@@ -125,6 +126,7 @@ async def loopaplay(_, message: Message):
     Config.DATA['AUDIO_DATA']={'dur':dur}
     await audio_join_call(file)
     data=Config.DATA.get('VIDEO_DETAILS')
+    await sleep(2)
     if data:
         vlink=data['link']
         await video_join_call(vlink)
