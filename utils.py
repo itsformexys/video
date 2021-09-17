@@ -1357,7 +1357,6 @@ def stop_and_restart():
 
 
 async def update():
-    await leave_call()
     if Config.HEROKU_APP:
         Config.HEROKU_APP.restart()
     else:
