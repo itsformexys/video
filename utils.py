@@ -502,7 +502,6 @@ async def manage_loop_audio():
 
 
 async def manage_restart():
-
     get_details = Config.DATA.get("AUDIO_DETAILS")
     if not get_details:
         print("Nothing found")
@@ -581,9 +580,6 @@ async def manage_restart():
     await sync_to_db()
     await video_join_call(original_file)
     await sync_to_db()
-
-
-
 
 
 
@@ -676,8 +672,7 @@ async def audio_join_call(link):
             dur=0
         Config.DATA['AUDIO_DATA'] = {"dur": dur}
         await sync_to_db()
-    command = ['ffmpeg', '-i', link, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
-    
+    command = ['ffmpeg', 'y', '-i', link, '-f', 's16le', '-ac', '1', '-ar', '48000', raw_audio]  
     process = await asyncio.create_subprocess_exec(
         *command,
         stdout=ffmpeg_log,
@@ -795,7 +790,7 @@ async def video_join_call(link):
                 stderr=asyncio.subprocess.STDOUT,
                 )
         else:
-            command = ["ffmpeg", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=scale=640:360', raw_video]
+            command = ["ffmpeg", "-y", "-i", link, "-f", "rawvideo", '-r', '20', '-pix_fmt', 'yuv420p', '-vf', f'scale=scale=640:360', raw_video]
             print("Waiting for convertion")
             process = await asyncio.create_subprocess_exec(
                 *command,
@@ -886,6 +881,7 @@ async def video_join_call(link):
         old=Config.GET_FILE.get("old_video")
         if old:
             for file in old:
+                print(file)
                 os.remove(f"./videodownloads/{file}")
             try:
                 del Config.GET_FILE["old_video"]
