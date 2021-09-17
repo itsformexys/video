@@ -1255,7 +1255,7 @@ def get_height_and_width(file):
         width, height = False, False
     return width, height
 @timeout(10)
-def is_radio():
+def is_radio(file):
     try:
         k=ffmpeg.probe(file)['streams']
     except KeyError:
