@@ -22,28 +22,14 @@ from config import Config
 from logger import LOGGER
 import os
 
-HOME_TEXT = "<b>Hey  [{}](tg://user?id={}) 🙋‍♂️\n\n @Ayrr4d is my master 💕</b>"
+HOME_TEXT = "@Ayrr4d is my master 💕"
 admin_filter=filters.create(is_admin) 
 
 @Client.on_message(filters.command(['start', f"start@{Config.BOT_USERNAME}"]))
 async def start(client, message):
-    buttons = [
-        [
-            InlineKeyboardButton('👨🏼‍🦯 Help', callback_data='help'),
-        ]
-    ]
-    reply_markup = InlineKeyboardMarkup(buttons)
-    await message.reply(HOME_TEXT.format(message.from_user.first_name, message.from_user.id), reply_markup=reply_markup)
+    await message.reply(HOME_TEXT)
 
 
-
-@Client.on_message(filters.command(["help", f"help@{Config.BOT_USERNAME}"]))
-async def show_help(client, message):
-    if Config.msg.get('help') is not None:
-        await Config.msg['help'].delete()
-    Config.msg['help'] = await message.reply_text(
-        Config.HELP,
-        )
 
 @Client.on_message(filters.command(['restart', 'update', f"restart@{Config.BOT_USERNAME}", f"update@{Config.BOT_USERNAME}"]) & admin_filter)
 async def update_handler(client, message):
