@@ -588,7 +588,7 @@ async def manange_loopin_on_end():
         return
     video_deatils=Config.DATA.get('VIDEO_DETAILS')
     if not video_deatils:
-        #await audio_join_call(raw_audio, is_raw=True)
+        await audio_join_call(raw_audio, is_raw=True)
         print("No video foyns")
         return
     og_v_link=video_deatils['link']
@@ -601,10 +601,6 @@ async def manange_loopin_on_end():
     await video_join_call(link, raw_file=dictd)
     
     
-
-
-
-
 
 
 async def manage_loop_vidwo():
@@ -743,7 +739,7 @@ async def audio_join_call(link, is_raw=False):
     except Exception as e:
         print("Error while join audio,", str(e))
         await sleep(2)
-        await audio_join_call(raw_audio, is_raw=True)
+        #await audio_join_call(raw_audio, is_raw=True)
     Config.AUDIO_STATUS=True
     old=Config.GET_FILE.get('old_audio')
     if old:
@@ -756,14 +752,16 @@ async def audio_join_call(link, is_raw=False):
     try:
         call=group_call.get_call(Config.CHAT)
     except GroupCallNotFound:
-        await audio_join_call(raw_audio, is_raw=True)
+        print("GP nOt found")
+        #await audio_join_call(raw_audio, is_raw=True)
         return
     except Exception as e:
         LOGGER.warning(e)
-        await audio_join_call(raw_audio, is_raw=True)
+        #await audio_join_call(raw_audio, is_raw=True)
         return
     if str(call.status) != "playing":
-        await audio_join_call(raw_audio, is_raw=True)
+        print(str(call.status))
+        #await audio_join_call(raw_audio, is_raw=True)
     return "Started playing audio."
 
 
