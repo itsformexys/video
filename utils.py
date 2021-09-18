@@ -1,6 +1,10 @@
 from logger import LOGGER
 try:
-    from pytgcalls.types.input_stream import InputAudioStream, InputVideoStream, AudioParameters, VideoParameters
+    from pytgcalls.types.input_stream import AudioParameters
+    from pytgcalls.types.input_stream import InputAudioStream
+    from pytgcalls.types.input_stream import InputStream
+    from pytgcalls.types.input_stream import InputVideoStream
+    from pytgcalls.types.input_stream import VideoParameters
     from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup, Message
     from pyrogram.raw.functions.phone import EditGroupCallTitle, CreateGroupCall
     from pytgcalls.exceptions import GroupCallNotFound, NoActiveGroupCall
@@ -128,18 +132,20 @@ async def join_and_play(audio, video, width, height):
     try:
         await group_call.join_group_call(
             int(Config.CHAT),
-            InputAudioStream(
-                audio,
-                AudioParameters(
-                    bitrate=48000,
+            InputStream(
+                InputAudioStream(
+                    audio,
+                    AudioParameters(
+                        bitrate=48000,
+                    ),
                 ),
-            ),
-            InputVideoStream(
-                video,
-                VideoParameters(
-                    width=width,
-                    height=height,
-                    frame_rate=30,
+                InputVideoStream(
+                    video,
+                    VideoParameters(
+                        width=width,
+                        height=height,
+                        frame_rate=30,
+                    ),
                 ),
                 
             ),
@@ -168,19 +174,21 @@ async def change_file(audio, video, width, height):
     try:
         await group_call.change_stream(
             int(Config.CHAT),
-            InputAudioStream(
-                audio,
-                AudioParameters(
-                    bitrate=48000,
+            InputStream(
+                InputAudioStream(
+                    audio,
+                    AudioParameters(
+                        bitrate=48000,
+                    ),
                 ),
-            ),
-            InputVideoStream(
-                video,
-                VideoParameters(
-                    width=width,
-                    height=height,
-                    frame_rate=30,
-                ),
+                InputVideoStream(
+                    video,
+                    VideoParameters(
+                        width=width,
+                        height=height,
+                        frame_rate=30,
+                    ),
+                )
             ),
             )
     except Exception as e:
@@ -716,10 +724,12 @@ async def audio_join_call(link, is_raw=False):
         if Config.CALL_STATUS:
             await group_call.change_stream(
                 int(Config.CHAT),
-                InputAudioStream(
-                    raw_audio,
-                    AudioParameters(
-                        bitrate=48000,
+                InputStream(
+                    InputAudioStream(
+                        raw_audio,
+                        AudioParameters(
+                            bitrate=48000,
+                        ),
                     ),
                 ),
                 )
@@ -727,10 +737,12 @@ async def audio_join_call(link, is_raw=False):
         else:
             await group_call.join_group_call(
                 int(Config.CHAT),
-                InputAudioStream(
-                    raw_audio,
-                    AudioParameters(
-                        bitrate=48000,
+                InputStream(
+                    InputAudioStream(
+                        raw_audio,
+                        AudioParameters(
+                            bitrate=48000,
+                        ),
                     ),
                 ),
                 stream_type=StreamType().local_stream,
@@ -886,18 +898,20 @@ async def video_join_call(link, raw_file=False):
         try:
             await group_call.change_stream(
                 int(Config.CHAT),
-                InputAudioStream(
-                    raw_audio,
-                    AudioParameters(
-                        bitrate=48000,
+                InputStream(
+                    InputAudioStream(
+                        raw_audio,
+                        AudioParameters(
+                            bitrate=48000,
+                        ),
                     ),
-                ),
-                InputVideoStream(
-                    raw_video,
-                    VideoParameters(
-                        width=640,
-                        height=360,
-                        frame_rate=20,
+                    InputVideoStream(
+                        raw_video,
+                        VideoParameters(
+                            width=640,
+                            height=360,
+                            frame_rate=20,
+                        ),
                     ),
                 ),
                 )
@@ -911,20 +925,22 @@ async def video_join_call(link, raw_file=False):
         try:
             await group_call.join_group_call(
                 int(Config.CHAT),
-                InputAudioStream(
-                    raw_audio,
-                    AudioParameters(
-                        bitrate=48000,
+                InputStream(
+                    InputAudioStream(
+                        raw_audio,
+                        AudioParameters(
+                            bitrate=48000,
+                        ),
                     ),
-                ),
-                InputVideoStream(
-                    raw_video,
-                    VideoParameters(
-                        width=640,
-                        height=360,
-                        frame_rate=20,
+                    InputVideoStream(
+                        raw_video,
+                        VideoParameters(
+                            width=640,
+                            height=360,
+                            frame_rate=20,
+                        ),
                     ),
-                ),
+                    ),
                 stream_type=StreamType().local_stream
                 )
             Config.CALL_STATUS=True
@@ -1484,6 +1500,7 @@ async def handler(client: PyTgCalls, update: Update):
     if Config.LOOP:
         if str(update) == 'STREAM_AUDIO_ENDED':
             #await manage_loop_audio()
+            await sleep(5)
             await manange_loopin_on_end()
             await sleep(1)
         if str(update) == 'STREAM_VIDEO_ENDED':
