@@ -36,7 +36,7 @@ async def start(client, message):
 async def update_handler(client, message):
     if Config.HEROKU_APP:
         k=await message.reply("Heroku APP found, Restarting app to update.")
-        dicts={"chat":k.chat.id, "msg_id":k.message.message_id}
+        dicts={"chat":k.chat.id, "msg_id":k.message_id}
         if not await db.is_saved("RESTART"):
             db.add_config('RESTART', dicts)
         else:
@@ -82,7 +82,7 @@ async def set_heroku_var(client, message):
             if var in config:
                 del config[var]
                 k=await m.edit(f"Sucessfully deleted {var}, Now restarting..")
-                dicts={"chat":k.chat.id, "msg_id":k.message.message_id}
+                dicts={"chat":k.chat.id, "msg_id":k.message_id}
                 if not await db.is_saved("RESTART"):
                     db.add_config('RESTART', dicts)
                 else:
@@ -97,7 +97,7 @@ async def set_heroku_var(client, message):
             m=await message.reply(f"Variable not found, Now setting as new var.")
         await asyncio.sleep(2)
         k=await m.edit(f"Succesfully set {var} with value {value}, Now Restarting to take effect of changes...")
-        dicts={"chat":k.chat.id, "msg_id":k.message.message_id}
+        dicts={"chat":k.chat.id, "msg_id":k.message_id}
         if not await db.is_saved("RESTART"):
             db.add_config('RESTART', dicts)
         else:
