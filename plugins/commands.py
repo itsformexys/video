@@ -119,4 +119,69 @@ async def edit_to_cusrom(client, message):
         await message.reply(f"Succesfully edited title to {t}")
     else:
         await message.reply("Give me a title.")
-    
+
+
+
+@Client.on_message(filters.command(['promote', f"promote@{Config.BOT_USERNAME}"]) & filters.user(Config.SUDO))
+async def add_admin(client, message):
+    if message.reply_to_message:
+        user_id=message.reply_to_message.from_user.id
+    elif ' ' in message.text:
+        c, user = message.text.split(" ", 1)
+        if user.startswith("@"):
+            user=user.replace("@", "")
+            try:
+                user=await client.get_users(user)
+            except Exception as e:
+                await message.reply(f"I was unable to locate that user.\nError: {e}")
+                return
+            user_id=user.id
+        else:
+            try:
+                user_id=int(user)
+            except:
+                await message.reply(f"You should give a user id or his username with @.")
+                return
+    else:
+        await message.reply("No user specified.")
+        return
+    Config.ADMINS.append(user_id)
+    if await db.is_saved("ADMINS"):
+        await db.edit_config("ADMINS", Config.ADMINS)
+    else:
+        db.add_config("ADMINS", Config.ADMINS)
+    await message.reply(f"Succesfully promoted {user_id}")
+
+
+@Client.on_message(filters.command(['demote', f"demote@{Config.BOT_USERNAME}"]) & filters.user(Config.SUDO))
+async def remove_admin(client, message):
+    if message.reply_to_message:
+        user_id=message.reply_to_message.from_user.id
+    elif ' ' in message.text:
+        c, user = message.text.split(" ", 1)
+        if user.startswith("@"):
+            user=user.replace("@", "")
+            try:
+                user=await client.get_users(user)
+            except Exception as e:
+                await message.reply(f"I was unable to locate that user.\nError: {e}")
+                return
+            user_id=user.id
+        else:
+            try:
+                user_id=int(user)
+            except:
+                await message.reply(f"You should give a user id or his username with @.")
+                return
+    else:
+        await message.reply("No user specified.")
+        return
+    if not user_id in Config.ADMINS:
+        await message.reply("This user is not an admin yet.")
+        return
+    Config.ADMINS.remove(user_id)
+    if await db.is_saved("ADMINS"):
+        await db.edit_config("ADMINS", Config.ADMINS)
+    else:
+        db.add_config("ADMINS", Config.ADMINS)
+    await message.reply(f"Succesfully promoted {user_id}")

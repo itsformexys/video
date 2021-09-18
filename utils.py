@@ -451,12 +451,16 @@ async def sync_to_db():
 async def sync_from_db():
     if not await db.is_saved("DATA"):
         db.add_config("DATA", Config.DATA)
+    if not await db.is_saved("ADMINS"):
+        db.add_config("ADMINS", Config.ADMINS)
     if not await db.is_saved("LOOP"):
         db.add_config("LOOP", Config.LOOP)
     data=await db.get_config("DATA") 
     Config.DATA = data
     loop = await db.get_config("LOOP")
     Config.LOOP=loop
+    admins=await db.get_config("ADMINS")
+    Config.ADMINS=admins
 
 
 
