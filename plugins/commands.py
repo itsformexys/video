@@ -111,7 +111,7 @@ async def set_heroku_var(client, message):
 @Client.on_message(filters.command(['title', f"title@{Config.BOT_USERNAME}"]) & admin_filter)
 async def edit_to_cusrom(client, message):
     if ' ' in message.text:
-        c, t = message.text.split(" ")
+        c, t = message.text.split(" ", 1)
         k, re = await edit_title_custom(t)
         if not k:
             await message.reply(f"Errors occured while editing title, may be iam not an admin here or there may be no active voicechats.\n\nError message: {re}")
