@@ -20,12 +20,6 @@ from pyrogram import Client, errors
 from config import Config
 from logger import LOGGER
 
-
-def get_cmd(dur):
-    if dur:
-        return "/play"
-    else:
-        return "/stream"
 @Client.on_inline_query()
 async def search(client, query):
     answers = []
@@ -49,7 +43,7 @@ async def search(client, query):
                         v["viewCount"]["short"]
                     ),
                     input_message_content=InputTextMessageContent(
-                        "{} https://www.youtube.com/watch?v={}".format(get_cmd(v["duration"]), v["id"])
+                        "https://www.youtube.com/watch?v={}".format(v["id"])
                     ),
                     thumb_url=v["thumbnails"][0]["url"]
                 )
