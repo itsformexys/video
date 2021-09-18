@@ -184,4 +184,4 @@ async def remove_admin(client, message):
         await db.edit_config("ADMINS", Config.ADMINS)
     else:
         db.add_config("ADMINS", Config.ADMINS)
-    await message.reply(f"Succesfully promoted {user_id}")
+    await message.reply(f"Succesfully Demoted {user_id}")
