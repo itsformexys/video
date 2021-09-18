@@ -935,8 +935,6 @@ async def video_join_call(link, raw_file=False):
             dictd={'audio':raw_audio, 'video':raw_video}
             await video_join_call(link, raw_file=dictd)
             return
-    if Config.EDIT_TITLE:
-        await edit_title()
     await sleep(1)  
     old=Config.GET_FILE.get("old_video")
     if old:
@@ -1464,7 +1462,8 @@ async def handler(client: PyTgCalls, update: Update):
     if str(update) == "JOINED_VOICE_CHAT":
         Config.CALL_STATUS = True
         if Config.EDIT_TITLE:
-            await edit_title()
+            if not Config.LOOP:
+                await edit_title()
     elif str(update) == "LEFT_VOICE_CHAT":
         Config.CALL_STATUS = False
     elif str(update) == "PAUSED_STREAM":
