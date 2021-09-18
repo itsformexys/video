@@ -1,5 +1,5 @@
 from pyrogram import Client, filters
-from utils import audio_join_call, clear_audio_cache, clear_video_cache, download, get_admins, get_duration, get_height_and_width, is_admin, is_audio_codec, is_radio, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, sync_to_db, video_join_call
+from utils import audio_join_call, clear_audio_cache, clear_video_cache, download, get_admins, get_audio_raw, get_duration, get_height_and_width, is_admin, is_audio_codec, is_radio, progress_bar, get_buttons, get_link, import_play_list, leave_call, play, get_playlist_str, send_playlist, shuffle_playlist, start_stream, stream_from_link, sync_to_db, video_join_call
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from youtube_search import YoutubeSearch
 from pyrogram import Client, filters
@@ -24,8 +24,8 @@ async def loopaplay(_, message: Message):
     type=""
     yturl=""
     ysearch=""
-    if message.reply_to_message and message.reply_to_message.audio:
-        msg = await message.reply_text("⚡️ **Checking Telegram Media...**")
+    msg = await message.reply_text("⚡️ **Checking Recived input...**")
+    if message.reply_to_message and message.reply_to_message.audio:        
         type='audio'
         m_video = message.reply_to_message.audio
     else:
@@ -44,7 +44,7 @@ async def loopaplay(_, message: Message):
                 except:
                     k=False
                 if not k:
-                    return await message.reply("This is an unsupported url, give me an m3u8 link.")
+                    return await msg.edit("This is an unsupported url, give me an m3u8 link.")
         elif " " in message.text:
             text = message.text.split(" ", 1)
             query = text[1]
@@ -56,30 +56,33 @@ async def loopaplay(_, message: Message):
             elif "http" in query:
                 type='radio'
                 file=query
+                msg=await msg.edit("Checking radio link..")
                 try:
                     k=is_radio(file)
                 except:
                     k=False
                 if not k:
-                    return await message.reply("This is an unsupported url, give me an m3u8 link.")
+                    return await msg.edit("This is an unsupported url, give me an m3u8 link.")
             else:
                 type="query"
                 ysearch=query
         else:
-            await message.reply_text("You Didn't gave me anything to play.Reply to a video or a youtube link.")
+            await msg.edit("You Didn't gave me anything to play.Reply to a video or a youtube link.")
             return
     user=f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     if type=="audio":
         ogdo=message.reply_to_message.audio.file_id
-        await message.reply("Downloading..")
+        await msg.edit("Downloading..")
         file=await message.reply_to_message.download(file_name="./tgd/", progress=progress_bar, progress_args=(message.reply_to_message.audio.file_size, time.time(), msg))
-    if type=="youtube" or type=="query":
+        await msg.edit("Coverting to raw file.")
+
+    elif type=="youtube" or type=="query":
         if type=="youtube":
-            msg = await message.reply_text("⚡️ **Fetching Audio From YouTube...**")
+            msg = await msg.edit("⚡️ **Fetching Audio From YouTube...**")
             url=yturl
         elif type=="query":
             try:
-                msg = await message.reply_text("⚡️ **Searching Audio From YouTube...**")
+                await msg.edit("⚡️ **Searching Audio From YouTube...**")
                 ytquery=ysearch
                 results = YoutubeSearch(ytquery, max_results=1).to_dict()
                 url = f"https://youtube.com{results[0]['url_suffix']}"
@@ -91,7 +94,7 @@ async def loopaplay(_, message: Message):
                 LOGGER.error(str(e))
                 return
         else:
-            await message.reply("I was unable to download that audio.")
+            await msg.edit("I was unable to download that audio.")
             return
         def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
         with YoutubeDL(def_ydl_opts) as ydl:
@@ -99,7 +102,7 @@ async def loopaplay(_, message: Message):
                 ydl_info = ydl.extract_info(url, download=False)
             except Exception as e:
                 LOGGER.error(f"Errors occured while getting link from youtube video {e}")
-                return await message.reply("I was unable to download that audio.")
+                return await msg.edit("I was unable to download that audio.")
             urlr=None
             ogdo=url
             try:
@@ -107,13 +110,13 @@ async def loopaplay(_, message: Message):
             except:
                 urlr=None
             if not urlr:
-                return await message.reply("I was unable to download that audio.")
+                return await msg.edit("I was unable to download that audio.")
         file=urlr
     elif type == 'radio':
         file=file
         ogdo = file
     else:
-        await message.reply("Unsupported URL")
+        await msg.edit("Unsupported URL")
         return
     await clear_audio_cache(delete=False)
     existing=Config.FILES.get("TG_AUDIO_FILE")
@@ -131,13 +134,17 @@ async def loopaplay(_, message: Message):
         dur=0
     print("Trigger")
     Config.DATA['AUDIO_DATA']={'dur':dur}
-    await audio_join_call(file)
+    raw_audio=await get_audio_raw(file)
+    if not raw_audio:
+        await msg.edit("Audio Unsupported.")
+        return
     data=Config.DATA.get('VIDEO_DETAILS')
-    await sleep(2)
     if data:
         vlink=data['link']
         await video_join_call(vlink)
-    await message.reply("Started")
+    else:
+        await audio_join_call(raw_audio, is_raw=True)
+    await msg.edit("Started Playing.")
     Config.LOOP=True
     await sync_to_db()
 
@@ -155,12 +162,11 @@ async def addideoloop_to_playlist(_, message: Message):
     type=""
     yturl=""
     ysearch=""
-    if message.reply_to_message and message.reply_to_message.video:
-        msg = await message.reply_text("⚡️ **Checking Telegram Media...**")
+    msg = await message.reply_text("⚡️ **Checking Telegram Media...**")
+    if message.reply_to_message and message.reply_to_message.video:     
         type='video'
         m_video = message.reply_to_message.video       
     elif message.reply_to_message and message.reply_to_message.document:
-        msg = await message.reply_text("⚡️ **Checking Telegram Media...**")
         m_video = message.reply_to_message.document
         type='video'
         if not "video" in m_video.mime_type:
@@ -181,7 +187,7 @@ async def addideoloop_to_playlist(_, message: Message):
                 except:
                     k=False
                 if not k:
-                    return await message.reply("This is an unsupported url, give me an m3u8 link.")
+                    return await msg.edit("This is an unsupported url, give me an m3u8 link.")
         elif " " in message.text:
             text = message.text.split(" ", 1)
             query = text[1]
@@ -198,26 +204,27 @@ async def addideoloop_to_playlist(_, message: Message):
                 except:
                     k=False
                 if not k:
-                    return await message.reply("This is an unsupported url, give me an m3u8 link.")
+                    return await msg.edit("This is an unsupported url, give me an m3u8 link.")
             else:
                 type="query"
                 ysearch=query
             
         else:
-            await message.reply_text("You Didn't gave me anything to play.Reply to a video or a youtube link.")
+            await msg.edit("You Didn't gave me anything to play.Reply to a video or a youtube link.")
             return
     user=f"[{message.from_user.first_name}](tg://user?id={message.from_user.id})"
     if type=="video":
         ogdo=m_video.file_id
-        await message.reply("Downloading..")
+        await msg.edit("Downloading..")
         file=await message.reply_to_message.download(file_name="tgd/", progress=progress_bar, progress_args=(m_video.file_size, time.time(), msg))
+        await msg.edit("Converting raw files.")
     elif type=="youtube" or type=="query":
         if type=="youtube":
-            msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
+            await msg.edit("⚡️ **Fetching Video From YouTube...**")
             url=yturl
         elif type=="query":
             try:
-                msg = await message.reply_text("⚡️ **Fetching Video From YouTube...**")
+                await msg.edit("⚡️ **Fetching Video From YouTube...**")
                 ytquery=ysearch
                 results = YoutubeSearch(ytquery, max_results=1).to_dict()
                 url = f"https://youtube.com{results[0]['url_suffix']}"
@@ -256,7 +263,7 @@ async def addideoloop_to_playlist(_, message: Message):
             if url:
                 file=urlr
             else:
-                return await message.reply("Unable to download video")
+                return await msg.edit("Unable to download video")
         file=urlr
     elif type == 'radio':
         file=file
@@ -272,8 +279,28 @@ async def addideoloop_to_playlist(_, message: Message):
         Config.FILES['TG_VIDEO_FILE']=file
     Config.DATA["VIDEO_DETAILS"] = {"type":type, "link":file, "oglink":ogdo}
     await video_join_call(file)
-    await message.reply("Started Video")    
+    await msg.edit("Started Video")    
     Config.LOOP=True
     await sync_to_db()
 
-        
+
+
+@Client.on_message(filters.command(["loop", f"loop@{Config.BOT_USERNAME}"]) & (filters.chat(Config.CHAT) | filters.private))
+async def toggle_looping(_, message: Message):
+    if ' ' in message.text:
+        c, d = message.text.split(' ')
+        if d == 'on':
+            data=Config.DATA.get('AUDIO_DATA')
+            if not data:
+                Config.LOOP=False
+                await sync_to_db()
+                return await message.reply("No files are found for looping")
+            Config.LOOP=True
+            await sync_to_db()
+            await message.reply("Looping turned on")
+        elif d == 'off':
+            Config.LOOP=False
+            await sync_to_db()
+            await message.reply("Looping toggled off.")
+    else:
+        await message.reply("What should I Do?\n Pass 'on' or 'off' along command.")

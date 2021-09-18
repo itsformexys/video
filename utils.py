@@ -1486,24 +1486,9 @@ async def handler(client: PyTgCalls, update: Update):
             #await manage_loop_audio()
             await manange_loopin_on_end()
             await sleep(1)
-            try:
-                call=group_call.get_call(Config.CHAT)
-            except GroupCallNotFound:
-                Config.CALL_STATUS = False
-                await manange_loopin_on_end()
-                return
-            except Exception as e:
-                LOGGER.warning(e)
-                Config.CALL_STATUS = False
-                await manange_loopin_on_end()
-                return
-            print(str(call.status), "Update call")
-            if str(call.status) != "playing":
-                Config.CALL_STATUS = False
-                await manange_loopin_on_end()
         if str(update) == 'STREAM_VIDEO_ENDED':
             await manange_loopin_on_end()
-            await sleep(1)
+            await sleep(5)
             try:
                 call=group_call.get_call(Config.CHAT)
             except GroupCallNotFound:
@@ -1514,7 +1499,7 @@ async def handler(client: PyTgCalls, update: Update):
                 Config.CALL_STATUS = False
                 LOGGER.warning(e)
                 await manange_loopin_on_end()
-                return
+                return       
             if str(call.status) != "playing":
                 Config.CALL_STATUS = False
                 await manange_loopin_on_end()
