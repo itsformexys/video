@@ -700,6 +700,7 @@ async def get_audio_raw(oglink):
         )
     Config.FFMPEG_PROCESSES['AUDIO']=process
     while not os.path.exists(raw_audio):
+        print("Sleeping")
         await sleep(1)
     Config.GET_FILE['RAW_AUDIO'] = raw_audio
     return raw_audio
@@ -1346,15 +1347,18 @@ def get_duration(file):
 @timeout(10)
 def is_audio_codec(ydl_info):
     urlr=None
-    for each in ydl_info['formats']:
-        if each['acodec'] != 'none':
-            urlr=each['url']
-            break #prefer 640x360
+    try:
+        for each in ydl_info['formats']:
+            if each['acodec'] != 'none':
+                urlr=each['url']
+                break #prefer 640x360
+            else:
+                continue
+        if urlr:
+            return urlr
         else:
-            continue
-    if urlr:
-        return urlr
-    else:
+            return False
+    except:
         return False
 
 
