@@ -749,6 +749,7 @@ async def audio_join_call(link, is_raw=False):
             except Exception as e:
                 print("errorin deleteting audio file", str(e))
                 pass
+    await sleep(5)
     try:
         call=group_call.get_call(Config.CHAT)
     except GroupCallNotFound:
