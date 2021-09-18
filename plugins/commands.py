@@ -35,7 +35,7 @@ async def start(client, message):
 @Client.on_message(filters.command(['restart', 'update', f"restart@{Config.BOT_USERNAME}", f"update@{Config.BOT_USERNAME}"]) & admin_filter)
 async def update_handler(client, message):
     if Config.HEROKU_APP:
-        k=await message.reply("Heroku APP found, Restarting app to update.")
+        k=await message.reply("Restarting app to update...")
         dicts={"chat":k.chat.id, "msg_id":k.message_id}
         if not await db.is_saved("RESTART"):
             db.add_config('RESTART', dicts)
