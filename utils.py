@@ -1052,6 +1052,24 @@ async def edit_title():
         LOGGER.error(f"Errors Occured while editing title - {e}")
         pass
 
+async def edit_title_custom(title):
+    try:
+        chat = await USER.resolve_peer(Config.CHAT)
+        full_chat=await USER.send(
+            GetFullChannel(
+                channel=InputChannel(
+                    channel_id=chat.channel_id,
+                    access_hash=chat.access_hash,
+                    ),
+                ),
+            )
+        edit = EditGroupCallTitle(call=full_chat.full_chat.call, title=title)
+        await USER.send(edit)
+        return True, f"Succesfully edited title to {title}"
+    except Exception as e:
+        LOGGER.error(f"Errors Occured while editing title - {e}")
+        return False, str(e)
+
 
 
 async def send_playlist():

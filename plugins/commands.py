@@ -15,7 +15,7 @@
 
 import asyncio
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, InputMediaDocument
-from utils import is_admin
+from utils import edit_title_custom, is_admin
 from pyrogram import Client, filters
 from utils import update, is_admin
 from config import Config
@@ -105,3 +105,18 @@ async def set_heroku_var(client, message):
         config[var] = str(value)
     else:
         await message.reply("You haven't provided any value for env, you should follow the correct format.\nExample: <code>/env CHAT=-1020202020202</code> to change or set CHAT var.\n<code>/env REPLY_MESSAGE= <code>To delete REPLY_MESSAGE.")
+
+
+
+@Client.on_message(filters.command(['title', f"title@{Config.BOT_USERNAME}"]) & admin_filter)
+async def edit_to_cusrom(client, message):
+    if ' ' in message.text:
+        c, t = message.text.split(" ")
+        k, re = await edit_title_custom(t)
+        if not k:
+            await message.reply(f"Errors occured while editing title, may be iam not an admin here or there may be no active voicechats.\n\nError message: {re}")
+            return
+        await message.reply(f"Succesfully edited title to {t}")
+    else:
+        await message.reply("Give me a title.")
+    
