@@ -66,7 +66,7 @@ async def skip():
     if not Config.playlist:
         print("No song in queue")
         return
-    elif Config.playlist == 1:
+    elif len(Config.playlist) == 1:
         await play()
         return
     old_track = Config.playlist.pop(0)
