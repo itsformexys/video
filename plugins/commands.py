@@ -21,7 +21,8 @@ from utils import update, is_admin
 from config import Config
 from logger import LOGGER
 import os
-
+from database import Database
+db=Database()
 HOME_TEXT = "@Ayrr4d is my master 💕"
 admin_filter=filters.create(is_admin) 
 
@@ -34,7 +35,12 @@ async def start(client, message):
 @Client.on_message(filters.command(['restart', 'update', f"restart@{Config.BOT_USERNAME}", f"update@{Config.BOT_USERNAME}"]) & admin_filter)
 async def update_handler(client, message):
     if Config.HEROKU_APP:
-        await message.reply("Heroku APP found, Restarting app to update.")
+        k=await message.reply("Heroku APP found, Restarting app to update.")
+        dicts={"chat":k.chat.id, "msg_id":k.message.message_id}
+        if not await db.is_saved("RESTART"):
+            db.add_config('RESTART', dicts)
+        else:
+            await db.edit_config("RESTART", dicts)
     else:
         await message.reply("No Heroku APP found, Trying to restart.")
     await update()
@@ -75,7 +81,12 @@ async def set_heroku_var(client, message):
             await asyncio.sleep(2)
             if var in config:
                 del config[var]
-                await m.edit(f"Sucessfully deleted {var}")
+                k=await m.edit(f"Sucessfully deleted {var}, Now restarting..")
+                dicts={"chat":k.chat.id, "msg_id":k.message.message_id}
+                if not await db.is_saved("RESTART"):
+                    db.add_config('RESTART', dicts)
+                else:
+                    await db.edit_config("RESTART", dicts)
                 config[var] = None               
             else:
                 await m.edit(f"No env named {var} found. Nothing was changed.")
@@ -85,7 +96,12 @@ async def set_heroku_var(client, message):
         else:
             m=await message.reply(f"Variable not found, Now setting as new var.")
         await asyncio.sleep(2)
-        await m.edit(f"Succesfully set {var} with value {value}, Now Restarting to take effect of changes...")
+        k=await m.edit(f"Succesfully set {var} with value {value}, Now Restarting to take effect of changes...")
+        dicts={"chat":k.chat.id, "msg_id":k.message.message_id}
+        if not await db.is_saved("RESTART"):
+            db.add_config('RESTART', dicts)
+        else:
+            await db.edit_config("RESTART", dicts)
         config[var] = str(value)
     else:
         await message.reply("You haven't provided any value for env, you should follow the correct format.\nExample: <code>/env CHAT=-1020202020202</code> to change or set CHAT var.\n<code>/env REPLY_MESSAGE= <code>To delete REPLY_MESSAGE.")

@@ -28,3 +28,6 @@ class Database:
     async def get_config(self, name):
         config = await self.col.find_one({'name':name})
         return config.get('value')
+    async def del_config(self, name):
+        await self.col.delete_one({'name':name})
+        return

@@ -19,8 +19,9 @@ from config import Config
 from pyrogram import idle
 from bot import bot
 import asyncio
+from database import Database
 import os
-
+db=Database()
 if not os.path.isdir("./downloads"):
     os.makedirs("./downloads")
 else:
@@ -43,6 +44,10 @@ async def main():
     await bot.start()
     Config.BOT_USERNAME = (await bot.get_me()).username
     await group_call.start()
+    if await db.is_saved("RESTART"):
+        msg=await db.get_config("RESTART")
+        await bot.edit_message_text(msg['chat'], msg['msg_id'], text="Succesfully restarted.")
+        await db.del_config("RESTART")
     if Config.LOOP:
         await manage_restart()
     #await start_stream()
