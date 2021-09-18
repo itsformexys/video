@@ -46,8 +46,11 @@ async def main():
     await group_call.start()
     if await db.is_saved("RESTART"):
         msg=await db.get_config("RESTART")
-        await bot.edit_message_text(msg['chat'], msg['msg_id'], text="Succesfully restarted.")
-        await db.del_config("RESTART")
+        try:
+            await bot.edit_message_text(msg['chat'], msg['msg_id'], text="Succesfully restarted.")
+            await db.del_config("RESTART")
+        except:
+            pass
     if Config.LOOP:
         await manage_restart()
     #await start_stream()
