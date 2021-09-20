@@ -20,7 +20,6 @@ try:
     from config import Config
     from asyncio import sleep
     from signal import SIGINT
-
     from bot import bot
     import subprocess
     import asyncio
@@ -41,6 +40,7 @@ except ModuleNotFoundError:
     os.execl(sys.executable, sys.executable, *sys.argv)
 ffmpeg_log = open("ffmpeg.txt", "w+")
 db=Database()
+
 async def play(video=False, audio=False, both=False):
     song=Config.playlist[0]    
     if song[3] == "telegram":
@@ -86,6 +86,71 @@ async def skip():
     if len(Config.playlist) <= 1:
         return
     await download(Config.playlist[1])
+
+async def refresh_links():
+    get_data=Config.DATA.get('AUDIO_DETAILS')
+    if get_data:
+        file_type=get_data['type']
+        oglink=get_data['oglink']
+        if file_type == "youtube" or file_type == "query":
+            def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
+            with YoutubeDL(def_ydl_opts) as ydl:
+                try:
+                    ydl_info = ydl.extract_info(oglink, download=False)
+                except Exception as e:
+                    LOGGER.error(f"Errors occured while getting link from youtube video {e}")
+                urlr=None
+                for each in ydl_info['formats']:
+                    if each['acodec'] != 'none':
+                        urlr=each['url']
+                        break #prefer 640x360
+                    else:
+                        continue
+                if not urlr:
+                    await update()
+                original_file=urlr
+            Config.DATA['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+    else:
+        LOGGER.warning("No Audio File For refresh")
+    get_details = Config.DATA.get("VIDEO_DETAILS")
+    if get_details:
+        file_type=get_details['type']
+        original_file=get_details['link']
+        oglink=get_details['oglink']
+        if file_type in ["youtube", "query"]:
+            def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
+            with YoutubeDL(def_ydl_opts) as ydl:
+                try:
+                    ydl_info = ydl.extract_info(oglink, download=False)
+                except Exception as e:
+                    LOGGER.error(f"Errors occured while getting link from youtube video {e}")
+                    await update()
+                    return
+                urlr=None
+                for each in ydl_info['formats']:
+                    if each['width'] == 640 \
+                        and each['acodec'] != 'none' \
+                            and each['vcodec'] != 'none':
+                            urlr=each['url']
+                            break #prefer 640x360
+                    elif each['width'] \
+                        and each['width'] <= 1280 \
+                            and each['acodec'] != 'none' \
+                                and each['vcodec'] != 'none':
+                                urlr=each['url']
+                                continue # any other format less than 1280
+                    else:
+                        continue
+                if urlr:
+                    file=urlr
+                original_file=urlr
+            Config.DATA['VIDEO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
+            LOGGER.warning("Links was refreshed (v)")
+    else:
+        LOGGER.warning("No Links was refreshed (v)")
+
+    
+
 
 
 async def join_call(audio, video, width, height, seek=False):

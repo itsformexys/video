@@ -1,4 +1,5 @@
 git+https://github.com/pyrogram/pyrogram@master
+apscheduler
 py-tgcalls==0.8.0
 tgcrypto
 ffmpeg-python

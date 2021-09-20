@@ -114,6 +114,7 @@ class Config:
     AUDIO_STATUS=False
     LOOP=False
     DUR={}
+    GEN_TIME={}
     HELP="""
 <b>How Can I Play Video?</b>
 

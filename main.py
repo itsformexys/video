@@ -13,15 +13,27 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from logger import LOGGER
-from utils import manage_loop_vidwo, manage_restart, start_stream, sync_from_db
-from user import group_call
-from config import Config
-from pyrogram import idle
-from bot import bot
-import asyncio
-from database import Database
-import os
+try:
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from utils import manage_restart, sync_from_db, refresh_links
+    from user import group_call
+    from config import Config
+    from pyrogram import idle
+    from bot import bot
+    import asyncio
+    from database import Database
+    import os
+except ModuleNotFoundError:
+    import os
+    import sys
+    import subprocess
+    file=os.path.abspath("requirements.txt")
+    subprocess.check_call([sys.executable, '-m', 'pip', 'install', '-r', file, '--upgrade'])
+    os.execl(sys.executable, sys.executable, *sys.argv)
+
 db=Database()
+scheduler = BackgroundScheduler()
+
 if not os.path.isdir("./downloads"):
     os.makedirs("./downloads")
 else:
@@ -54,6 +66,9 @@ async def main():
     if Config.LOOP:
         await manage_restart()
     #await start_stream()
+    scheduler.add_job(refresh_links, "interval", seconds=14400)
+    LOGGER.warning("Scheduler started.")
+    scheduler.start()
     LOGGER.warning(f"{Config.BOT_USERNAME} Started.")
     await idle()
     LOGGER.warning("Stoping")
