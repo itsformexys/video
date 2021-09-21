@@ -88,11 +88,12 @@ async def skip():
     await download(Config.playlist[1])
 
 async def refresh_links():
+    LOGGER.warning("Starting the scheduled task")
     get_data=Config.DATA.get('AUDIO_DETAILS')
     if get_data:
         file_type=get_data['type']
         oglink=get_data['oglink']
-        if file_type == "youtube" or file_type == "query":
+        if file_type in ["youtube", "query"]:
             def_ydl_opts = {'quiet': True, 'prefer_insecure': False, "geo-bypass": True}
             with YoutubeDL(def_ydl_opts) as ydl:
                 try:
@@ -109,6 +110,8 @@ async def refresh_links():
                 if not urlr:
                     await update()
                 original_file=urlr
+            LOGGER.warning(f"Links was refreshed (A)- {original_file}")
+            
             Config.DATA['AUDIO_DETAILS']={'type':file_type, 'link':original_file, 'oglink':oglink}
     else:
         LOGGER.warning("No Audio File For refresh")
@@ -148,6 +151,7 @@ async def refresh_links():
             LOGGER.warning("Links was refreshed (v)")
     else:
         LOGGER.warning("No Links was refreshed (v)")
+    await sync_to_db()
 
     
 

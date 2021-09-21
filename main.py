@@ -14,7 +14,7 @@
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 from logger import LOGGER
 try:
-    from apscheduler.schedulers.background import BackgroundScheduler
+    from apscheduler.schedulers.asyncio import AsyncIOScheduler
     from utils import manage_restart, sync_from_db, refresh_links
     from user import group_call
     from config import Config
@@ -32,7 +32,7 @@ except ModuleNotFoundError:
     os.execl(sys.executable, sys.executable, *sys.argv)
 
 db=Database()
-scheduler = BackgroundScheduler()
+scheduler = AsyncIOScheduler()
 
 if not os.path.isdir("./downloads"):
     os.makedirs("./downloads")
@@ -66,7 +66,7 @@ async def main():
     if Config.LOOP:
         await manage_restart()
     #await start_stream()
-    scheduler.add_job(refresh_links, "interval", seconds=14400)
+    scheduler.add_job(refresh_links, "interval", minutes=5, max_instances=50, misfire_grace_time=2)
     LOGGER.warning("Scheduler started.")
     scheduler.start()
     LOGGER.warning(f"{Config.BOT_USERNAME} Started.")
