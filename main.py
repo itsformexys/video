@@ -66,7 +66,7 @@ async def main():
     if Config.LOOP:
         await manage_restart()
     #await start_stream()
-    scheduler.add_job(refresh_links, "interval", minutes=5, max_instances=50, misfire_grace_time=2)
+    scheduler.add_job(refresh_links, "interval", minutes=180, max_instances=50, misfire_grace_time=2)
     LOGGER.warning("Scheduler started.")
     scheduler.start()
     LOGGER.warning(f"{Config.BOT_USERNAME} Started.")
